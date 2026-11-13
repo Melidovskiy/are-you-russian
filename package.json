@@ -1,0 +1,21 @@
+{
+  "name": "are-you-russian",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Русскоязычная адаптация FuckClaude для проверки окружения пользователей Claude.",
+  "author": "Melidovskiy",
+  "license": "MIT",
+  "repository": "github:Melidovskiy/are-you-russian",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run build && node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

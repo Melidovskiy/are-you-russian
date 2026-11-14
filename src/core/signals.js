@@ -120,7 +120,8 @@ function detectVendorFonts(profile) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return { raw: "canvas unavailable", score: 0 };
   const probe = profile.fontProbe || "ABCabc012";
-  const hit = profile.vendorFonts.filter((f) => isFontAvailable(f, probe, ctx));
+  const fonts = profile.vendorFonts.map((name) => ({ name, available: isFontAvailable(name, probe, ctx) }));
+  const hit = fonts.filter((font) => font.available).map((font) => font.name);
   let score = 0;
   if (profile.id === "cn") {
     score = hit.length >= 2 ? 1 : hit.length === 1 ? 0.8 : 0;
@@ -128,7 +129,7 @@ function detectVendorFonts(profile) {
     score = Math.min(1, 0.75 + 0.08 * hit.length);
   }
   const raw = hit.length ? hit.slice(0, 3).join(", ") + (hit.length > 3 ? "\u2026" : "") : "none detected";
-  return { raw, score };
+  return { raw, score, details: { fonts } };
 }
 function uaData() {
   return navigator.userAgentData;
@@ -174,6 +175,20 @@ function scoreEmojiVendor(probe) {
   };
   return { vendor, score: vendorScore[vendor] ?? 0.4 };
 }
+function parseIceCandidate(candidate) {
+  const parts = (candidate.candidate || "").trim().split(/\s+/);
+  const address = candidate.address || parts[4] || "";
+  const typeIndex = parts.indexOf("typ");
+  const type = candidate.type || (typeIndex >= 0 ? parts[typeIndex + 1] : "unknown");
+  if (!address || address === "0.0.0.0" || address === "::") return null;
+  const normalized = address.toLowerCase().replace(/^::ffff:/, "");
+  let scope = "public";
+  if (normalized.endsWith(".local")) scope = "masked";
+  else if (/^(10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(normalized)) scope = "private";
+  else if (/^(::1$|f[cd][a-f\d]{2}:|fe[89ab][a-f\d]:)/.test(normalized)) scope = "private";
+  else if (!/^[\d.]+$/.test(address) && !address.includes(":")) return null;
+  return { address, type, scope };
+}
 function detectWebrtcLeak() {
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !window.RTCPeerConnection) {
@@ -181,22 +196,27 @@ function detectWebrtcLeak() {
       return;
     }
     let resolved = false;
-    const ips = [];
+    const candidates = [];
     let pc = null;
+    let timer;
     const finish = () => {
       if (resolved) return;
       resolved = true;
+      clearTimeout(timer);
       try {
         if (pc) pc.close();
       } catch {
       }
+      const ips = candidates.filter((candidate) => candidate.scope !== "masked").map((candidate) => candidate.address);
+      const details = { candidates, stunServer: "stun.l.google.com:19302" };
       if (ips.length === 0) {
-        resolve({ raw: "no leak detected", score: 0 });
+        resolve({ raw: "no leak detected", score: 0, details });
       } else {
         const raw = ips.slice(0, 2).join(", ");
-        resolve({ raw: `candidate leak (${raw})`, score: 0.5 });
+        resolve({ raw: `candidate leak (${raw})`, score: 0.5, details });
       }
     };
+    timer = setTimeout(finish, 3000);
     try {
       pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
       pc.onicecandidate = (e) => {
@@ -204,9 +224,9 @@ function detectWebrtcLeak() {
           finish();
           return;
         }
-        const match = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/i.exec(e.candidate.candidate);
-        if (match && match[1] && !ips.includes(match[1])) {
-          ips.push(match[1]);
+        const candidate = parseIceCandidate(e.candidate);
+        if (candidate && !candidates.some((item) => item.address === candidate.address && item.type === candidate.type)) {
+          candidates.push(candidate);
         }
       };
       pc.createDataChannel("");
@@ -214,7 +234,6 @@ function detectWebrtcLeak() {
     } catch {
       finish();
     }
-    setTimeout(finish, 1e3);
   });
 }
 const ICON = {
@@ -260,7 +279,12 @@ function makeDetectors(regionId, profile) {
   return {
     timezone: () => {
       const tz = getTimezone();
-      return { raw: tz || "unknown", score: scoreTimezoneForRegion(tz, profile) };
+      const now = new Date();
+      return { raw: tz || "unknown", score: scoreTimezoneForRegion(tz, profile), details: {
+        timezone: tz, offsetMinutes: -now.getTimezoneOffset(),
+        januaryOffset: -new Date(now.getFullYear(), 0, 15).getTimezoneOffset(),
+        julyOffset: -new Date(now.getFullYear(), 6, 15).getTimezoneOffset()
+      } };
     },
     timezoneOffset: () => {
       const offset = (new Date()).getTimezoneOffset();
@@ -273,19 +297,25 @@ function makeDetectors(regionId, profile) {
       const langs = normLangs();
       return {
         raw: langs.join(", ") || "unknown",
-        score: scoreLanguagesForRegion(langs, regionId)
+        score: scoreLanguagesForRegion(langs, regionId),
+        details: { languages: langs, primaryLanguage: navigator.language || "" }
       };
     },
     intlLocale: () => {
       let locale = "";
+      let details = {};
       try {
-        locale = Intl.DateTimeFormat().resolvedOptions().locale || "";
+        const options = Intl.DateTimeFormat().resolvedOptions();
+        locale = options.locale || "";
+        details = { locale, calendar: options.calendar, numberingSystem: options.numberingSystem,
+          date: new Intl.DateTimeFormat(undefined, { dateStyle: "long", timeZone: "UTC" }).format(new Date("2026-06-15T12:00:00Z")),
+          number: new Intl.NumberFormat().format(12345.67) };
       } catch {
         locale = "";
       }
       return {
         raw: locale || "unknown",
-        score: scoreIntlLocaleForRegion(locale, regionId)
+        score: scoreIntlLocaleForRegion(locale, regionId), details
       };
     },
     fonts: () => regionId === "cn" ? detectCnFonts() : detectRegionalFonts(profile),
@@ -294,7 +324,9 @@ function makeDetectors(regionId, profile) {
     cnBrowser: () => {
       const brands = (uaData()?.brands ?? []).map((b) => b.brand).join(" ");
       const { name, score } = scoreBrowserPatterns(`${navigator.userAgent} ${brands}`, profile.browsers);
-      return { raw: name ?? "none detected", score };
+      return { raw: name ?? "none detected", score, details: {
+        userAgent: navigator.userAgent, brands: uaData()?.brands || [], browser: name
+      } };
     },
     deviceVendor: async () => {
       let extra = "";
@@ -310,7 +342,11 @@ function makeDetectors(regionId, profile) {
       const ua = (navigator.userAgent || "").toLowerCase();
       const platform = (navigator.platform || "").toLowerCase();
       const { vendor, score } = scoreEmojiVendor(`${platform} ${ua}`);
-      return { raw: `${vendor} style`, score };
+      return { raw: `${vendor} style`, score, details: {
+        vendor, platform: navigator.userAgentData?.platform || navigator.platform || "unknown",
+        touchPoints: navigator.maxTouchPoints || 0, colorDepth: globalThis.screen?.colorDepth,
+        pixelRatio: globalThis.devicePixelRatio || 1
+      } };
     }
   };
 }
@@ -369,6 +405,7 @@ export {
   measuredWeightForRegion,
   regionForLang,
   riskBand,
+  parseIceCandidate,
   scoreBrowserForRegion,
   scoreBrowserPatterns,
   scoreCnBrowser,

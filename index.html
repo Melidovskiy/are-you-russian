@@ -3,65 +3,104 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Сочтёт ли Claude ваше окружение российским? Русскоязычная адаптация FuckClaude с исходными проверками, весами и объяснением каждого сигнала.">
-    <meta name="theme-color" content="#f7f6f3">
+    <meta name="description" content="Проверка настроек браузера для пользователей Claude. Часовой пояс, языки, шрифты, WebRTC и региональные форматы.">
+    <meta name="theme-color" content="#f8f9fa">
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
-    <meta property="og:title" content="Are you Russian? Что о вас может узнать Claude">
-    <meta property="og:description" content="Проверка окружения для пользователей Claude по методике FuckClaude. На русском языке, с объяснением результатов.">
+    <meta property="og:title" content="Are you Russian — проверка окружения для Claude">
+    <meta property="og:description" content="Какие настройки браузера указывают на российский регион? Подробные результаты семи проверок.">
     <meta property="og:type" content="website">
-    <title>Are you Russian? Что о вас может узнать Claude</title>
-    <link rel="icon" href="./assets/favicon.png" type="image/png">
+    <title>Are you Russian — проверка окружения для Claude</title>
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="./src/styles.css">
     <script type="module" src="./app.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">К проверке</a>
-    <header class="site-header shell">
-      <a class="wordmark" href="./">are you russian?</a>
-      <nav aria-label="Навигация"><a href="#method">О проверке</a><a href="https://github.com/Melidovskiy/are-you-russian" target="_blank" rel="noopener noreferrer">GitHub</a></nav>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="./">are you russian</a>
+        <nav aria-label="Навигация">
+          <a class="active" href="#main" aria-current="page">Проверка</a>
+          <a href="#method">О методике</a>
+          <a href="https://github.com/Melidovskiy/are-you-russian" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <select id="theme" aria-label="Цветовая тема">
+            <option value="system">Авто</option>
+            <option value="light">Светлая</option>
+            <option value="dark">Тёмная</option>
+          </select>
+        </nav>
+      </div>
     </header>
     <main id="main" class="shell">
       <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">Claude знает,<br>что вы из России?</h1>
-        <p class="lead">Посмотрите, какие настройки вашего окружения могут выдать регион при работе с Claude.</p>
-        <button id="scan" class="button primary" type="button">Проверить окружение</button>
-        <label class="webrtc-option"><input id="include-webrtc" type="checkbox"> Включить WebRTC</label>
-        <p class="local-note">Расчёт выполняется в браузере. WebRTC дополнительно отправит STUN-запрос Google, который увидит ваш сетевой адрес.</p>
+        <h1 id="page-title">Что ваш браузер<br class="desktop-break"> рассказывает Claude о регионе</h1>
+        <p class="lead">Проверьте часовой пояс, языки и другие настройки, по которым ваше окружение может выглядеть российским.</p>
+        <div class="actions">
+          <button id="scan" class="button primary" type="button">Проверить окружение</button>
+          <a class="button secondary" href="#method">Как считается индекс</a>
+        </div>
+        <label class="webrtc-option">
+          <span class="switch">
+            <input id="include-webrtc" type="checkbox" role="switch" aria-describedby="webrtc-note">
+            <span class="switch-track" aria-hidden="true"></span>
+          </span>
+          <span>Проверить WebRTC</span>
+        </label>
+        <p id="webrtc-note" class="local-note">WebRTC обращается к STUN-серверу Google. Остальные проверки выполняются локально.</p>
         <div id="result" class="result-panel" hidden>
-          <p id="scan-state" class="state-label">Проверяем окружение</p>
-          <div class="score-line"><span id="score" class="score">—</span><span class="score-unit">/ 100</span></div>
-          <p id="verdict" class="verdict"></p>
-          <p id="score-note" class="score-note"></p>
-          <p class="score-caption">Оценка по российскому профилю FuckClaude. Она отражает признаки окружения, доступные этой странице.</p>
-          <button id="download" class="text-button" type="button" disabled>Скачать отчёт</button>
+          <div class="score-block">
+            <span class="score-label">Индекс российских настроек</span>
+            <div class="score-line"><span id="score" class="score">—</span><span class="score-unit">/ 100</span></div>
+            <meter id="score-meter" min="0" max="100" low="30" high="60" optimum="0" value="0" aria-label="Индекс российских настроек"></meter>
+          </div>
+          <div class="result-copy">
+            <p id="verdict" class="verdict">Проверяем окружение</p>
+            <p id="score-note" class="score-note"></p>
+            <p class="score-caption">Индекс учитывает браузерные признаки по методике FuckClaude. Внутренняя оценка аккаунта Anthropic странице недоступна.</p>
+            <button id="download" class="text-button" type="button" disabled>Скачать JSON-отчёт</button>
+          </div>
+          <div id="scan-progress" class="scan-progress">
+            <label id="scan-state" for="progress">Проверяем окружение</label>
+            <progress id="progress" max="7" value="0"></progress>
+          </div>
         </div>
         <p id="scan-message" class="visually-hidden" role="status" aria-live="polite"></p>
-        <noscript><p>Для проверки нужен JavaScript.</p></noscript>
+        <noscript><p>Включите JavaScript для запуска проверки.</p></noscript>
       </section>
-
       <section class="signals-section" aria-labelledby="signals-title">
-        <h2 id="signals-title">Какие сигналы проверяем</h2>
-        <p class="section-description">Откройте строку, чтобы увидеть способ проверки и значение сигнала для Claude.</p>
+        <div class="section-heading">
+          <h2 id="signals-title">Подробные результаты</h2>
+          <button id="expand" class="text-button" type="button" aria-expanded="false" aria-controls="signals">Развернуть всё</button>
+        </div>
+        <p class="section-description">В каждой проверке — полученные значения, вклад в индекс и способ расчёта.</p>
         <div id="signals" class="signal-list"></div>
       </section>
-
       <section id="method" class="method-section" aria-labelledby="method-title">
         <h2 id="method-title">Как это связано с Claude</h2>
-        <div class="method-copy">
-          <p>Оригинальный FuckClaude появился после сообщений об анализе Claude Code. При работе через сторонний API-адрес клиент проверял часовой пояс и имя прокси, а результат кодировал в строке даты системного промпта.</p>
-          <p>В исходном коде подтверждённой проверкой Claude Code отмечен китайский часовой пояс. Для России автор составил отдельный оценочный профиль. Здесь используются его детекторы, веса и пороги.</p>
-          <p>Этот сайт показывает браузерную часть окружения. Доступ к внутренней оценке Anthropic, данным аккаунта и настройкам установленного Claude Code у страницы отсутствует. Итоговые баллы помогают разобрать доступные признаки, но точную вероятность блокировки по ним определить нельзя.</p>
-          <p class="source-link"><a href="https://github.com/LinXiaoTao/FuckClaude" target="_blank" rel="noopener noreferrer">Исходный проект и описание методики</a></p>
-          <details class="method-details"><summary>Из чего складывается оценка?</summary><p>Часовой пояс — 34 балла, языки — 22, шрифты приложений — 12, WebRTC — 10, браузер — 10, региональные форматы — 8, платформа и стиль emoji — 4. Это веса автора исходного проекта. Максимальная сумма — 100. Пороги низкого, среднего и высокого индекса также сохранены из FuckClaude.</p><p>Без проверки WebRTC или при недоступных данных показывается диапазон. Например, 45–55 означает 45 полученных баллов и ещё 10 баллов непроверенного сигнала.</p></details>
-          <details class="method-details"><summary>Можно ли узнать регион по одному признаку?</summary><p>Русский язык, шрифты и выбранный часовой пояс встречаются у людей в разных странах. WebRTC сам по себе не определяет Россию, а тип платформы имеет слабую связь с регионом. Эти ограничения есть у исходной методики. Сервер Claude дополнительно получает IP и данные аккаунта, которые в этой оценке не учитываются.</p></details>
-          <details class="method-details"><summary>Что происходит с моими данными?</summary><p>Проверки выполняются в браузере. Аналитики и сохранения результатов между посещениями нет. Шрифты загружаются с самого сайта. Хостинг получает обычные запросы загрузки страницы.</p><p>WebRTC включается отдельным флажком перед запуском и обращается к STUN-серверу Google. Отчёт формируется на устройстве и может содержать адреса из WebRTC. Проверьте его содержимое перед отправкой другим людям.</p></details>
-        </div>
+        <p>Страница проверяет настройки, доступные веб-сайтам. Индекс использует российский профиль проекта FuckClaude. Сумма весов семи проверок — 100 баллов.</p>
+        <p>Низкий индекс — до 30 баллов, средний — от 31 до 60, высокий — от 61. Если часть данных недоступна, результат показан диапазоном.</p>
+        <details class="method-details">
+          <summary>Какие проверки использует Claude?</summary>
+          <p>Публичные разборы Claude Code описывают чтение часового пояса и имени стороннего API-сервера. Российский профиль FuckClaude объединяет региональные признаки в авторскую модель. Её баллы отражают настройки браузера, а внутренние проверки Anthropic остаются неизвестны.</p>
+          <p><a href="https://github.com/LinXiaoTao/FuckClaude" target="_blank" rel="noopener noreferrer">Исходный проект и описание методики</a></p>
+        </details>
+        <details class="method-details">
+          <summary>Почему VPN может давать высокий индекс?</summary>
+          <p>VPN меняет маршрут и выходной IP. Часовой пояс, языки, шрифты и региональные форматы задаются в системе и браузере. Их значения видны в подробных результатах.</p>
+        </details>
+        <details class="method-details">
+          <summary>Куда отправляются результаты?</summary>
+          <p>Результаты остаются на устройстве. JSON-отчёт создаётся в браузере. В нём могут быть адреса WebRTC, если эта проверка включена. STUN-сервер Google получает сетевой адрес запроса. Хостинг получает обычные запросы загрузки страницы.</p>
+          <p>Сайт запоминает только выбранную цветовую тему.</p>
+        </details>
       </section>
     </main>
-    <footer class="site-footer shell">
-      <p><a href="https://github.com/Melidovskiy/are-you-russian">Melidovskiy</a></p>
-      <p>На основе <a href="https://github.com/LinXiaoTao/FuckClaude">FuckClaude</a> от LinXiaoTao. <a href="./LICENSE">MIT License</a>.</p>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <a href="https://github.com/Melidovskiy/are-you-russian">Melidovskiy</a>
+        <span>На основе <a href="https://github.com/LinXiaoTao/FuckClaude">FuckClaude</a> от LinXiaoTao. <a href="./LICENSE">MIT License</a>.</span>
+      </div>
     </footer>
   </body>
 </html>

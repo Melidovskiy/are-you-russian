@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SIGNALS, detectSignal, summarize } from '../src/signals.js';
-import { REGIONS, riskBand, scoreLanguagesForRegion, scoreTimezoneForRegion, signalsFor } from '../src/core/signals.js';
+import { SIGNALS, detectSignal, formatOffset, resultDetails, summarize } from '../src/signals.js';
+import { REGIONS, parseIceCandidate, riskBand, scoreLanguagesForRegion, scoreTimezoneForRegion, signalsFor } from '../src/core/signals.js';
 import { assertRegionProfiles } from '../src/core/regions.js';
 
 test('используется российский профиль оригинала с семью исходными весами', () => {
@@ -68,4 +68,114 @@ test('ошибки детектора сохраняются как недост
 test('пустой результат Canvas не становится успешной проверкой', async () => {
   const result = await detectSignal({ id: 'vendorFonts', weight: 12, detect() { return { raw: 'canvas unavailable', score: 0 }; } }, false);
   assert.equal(result.points, null);
+});
+
+test('IPv6 с сокращением и тип ICE сохраняются', () => {
+  assert.deepEqual(parseIceCandidate({ candidate: 'candidate:1 1 udp 123 2001:db8::15 443 typ srflx' }),
+    { address: '2001:db8::15', type: 'srflx', scope: 'public' });
+});
+
+test('локальные адреса и mDNS различаются', () => {
+  for (const address of ['10.0.0.2', '192.168.1.5', '172.16.0.1', '172.31.255.1', 'fe80::2', 'fd00::4', '::1', '::ffff:192.168.1.2']) {
+    assert.equal(parseIceCandidate({ address, type: 'host' }).scope, 'private', address);
+  }
+  assert.equal(parseIceCandidate({ address: 'device.local', type: 'host' }).scope, 'masked');
+  assert.equal(parseIceCandidate({ address: 'device.LOCAL', type: 'host' }).scope, 'masked');
+  assert.equal(parseIceCandidate({ address: '172.32.0.1', type: 'srflx' }).scope, 'public');
+  assert.equal(parseIceCandidate({ address: '0.0.0.0' }), null);
+  assert.equal(parseIceCandidate({ candidate: '' }), null);
+});
+
+test('отчёт сохраняет подробности и время измерения', async () => {
+  const details = { languages: ['en-US', 'ru-RU'], primaryLanguage: 'en-US' };
+  const result = await detectSignal({ id: 'language', weight: 22,
+    detect: () => ({ raw: 'en-us, ru-ru', score: 0.7, details }) }, false);
+  assert.deepEqual(result.details, details);
+  assert.equal(Number(result.points.toFixed(1)), 15.4);
+  assert.ok(Number.isFinite(result.elapsedMs));
+});
+
+test('некорректная оценка сохраняет проверку как недоступную', async () => {
+  for (const score of [NaN, Infinity, -1, 1.1]) {
+    const result = await detectSignal({ id: 'timezone', weight: 34, detect: () => ({ raw: 'Europe/Moscow', score }) }, false);
+    assert.equal(result.points, null);
+    assert.equal(result.reason, 'unavailable');
+  }
+});
+
+test('повторные и посторонние записи не увеличивают число проверок', () => {
+  const summary = summarize([{ id: 'timezone', points: 34, score: 1 },
+    { id: 'timezone', points: 34, score: 1 }, { id: 'other', points: 100, score: 1 }]);
+  assert.equal(summary.available, 1);
+  assert.equal(summary.matches, 1);
+  assert.equal(summary.minimum, 34);
+  assert.equal(summary.maximum, 100);
+});
+
+test('невозможный вклад не выходит за пределы ста баллов', () => {
+  const summary = summarize([{ id: 'timezone', points: 500, score: 1 }]);
+  assert.equal(summary.minimum, 0);
+  assert.equal(summary.maximum, 100);
+});
+
+test('смещение UTC показывает неполные часы и нулевое смещение', () => {
+  assert.equal(formatOffset(330), 'UTC+5:30');
+  assert.equal(formatOffset(-210), 'UTC−3:30');
+  assert.equal(formatOffset(0), 'UTC+0:00');
+  assert.equal(formatOffset(undefined), 'Недоступно');
+});
+
+test('каждый шрифт и порядок языков попадают в подробные результаты', () => {
+  const fonts = [{ name: 'YS Text', available: false }, { name: 'VK Sans Display', available: true }];
+  assert.deepEqual(resultDetails({ id: 'vendorFonts' }, { details: { fonts } }),
+    [['YS Text', 'Не найден'], ['VK Sans Display', 'Найден']]);
+  assert.deepEqual(resultDetails({ id: 'language' }, { details: { primaryLanguage: 'en-US', languages: ['en-US', 'ru-RU'] } }),
+    [['Основной язык', 'en-US'], ['Приоритет 1', 'en-US'], ['Приоритет 2', 'ru-RU']]);
+});
+
+test('неполный WebRTC сохраняет обнаруженные mDNS-кандидаты', async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'RTCPeerConnection');
+  Object.defineProperty(globalThis, 'RTCPeerConnection', { configurable: true, value: class {} });
+  try {
+    const details = { candidates: [{ address: 'phone.local', type: 'host', scope: 'masked' }] };
+    const result = await detectSignal({ id: 'webrtcLeak', weight: 10,
+      detect: () => ({ raw: 'no leak detected', score: 0, details }) }, true);
+    assert.equal(result.points, null);
+    assert.deepEqual(result.details, details);
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, 'RTCPeerConnection', descriptor);
+    else delete globalThis.RTCPeerConnection;
+  }
+});
+
+test('WebRTC собирает IPv4, IPv6 и mDNS, затем закрывает соединение', async () => {
+  const keys = ['window', 'RTCPeerConnection'];
+  const descriptors = keys.map(key => Object.getOwnPropertyDescriptor(globalThis, key));
+  let closed = 0;
+  class Peer {
+    createDataChannel() {}
+    async createOffer() { return { type: 'offer', sdp: '' }; }
+    async setLocalDescription() {
+      for (const address of ['192.168.1.2', '2001:db8::15', 'phone.local']) {
+        this.onicecandidate({ candidate: { address, type: 'host', candidate: `candidate:1 1 udp 1 ${address} 443 typ host` } });
+      }
+      this.onicecandidate({ candidate: null });
+    }
+    close() { closed += 1; }
+  }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { RTCPeerConnection: Peer } });
+  Object.defineProperty(globalThis, 'RTCPeerConnection', { configurable: true, value: Peer });
+  try {
+    const signal = SIGNALS.find(signal => signal.id === 'webrtcLeak');
+    const result = await detectSignal(signal, true);
+    assert.equal(result.points, 5);
+    assert.equal(result.details.candidates.length, 3);
+    assert.deepEqual(result.details.candidates.map(candidate => candidate.scope), ['private', 'public', 'masked']);
+    assert.equal(closed, 1);
+  } finally {
+    keys.forEach((key, index) => {
+      if (descriptors[index]) Object.defineProperty(globalThis, key, descriptors[index]);
+      else delete globalThis[key];
+    });
+  }
 });

@@ -1,88 +1,149 @@
 import { signalsFor, riskBand } from './core/signals.js';
 
-const DESCRIPTIONS = {
+const descriptions = {
   timezone: {
     label: 'Часовой пояс',
-    method: 'Читается из Intl.DateTimeFormat и сравнивается со списком российского профиля оригинала.',
-    limit: 'Часовой пояс доступен странице и может расходиться с регионом IP. В исходнике связь с известной проверкой Claude Code отмечена только для китайского профиля.',
+    method: 'Название системного часового пояса и смещение относительно UTC.',
+    rule: 'Пояс из российского списка даёт 34 балла. Смещения зимой и летом показаны отдельно.',
+    suggestion: 'Проверьте часовой пояс в настройках системы. VPN обычно сохраняет системный часовой пояс.',
   },
   language: {
     label: 'Языки браузера',
-    method: 'Используется navigator.languages. В оригинале ru-RU имеет полный вес, ru — частичный. Языки после первого получают меньший вклад.',
-    limit: 'Признак из оценочного российского профиля FuckClaude. Его использование внутренним классификатором Claude не подтверждено.',
+    method: 'Основной язык и полный список языков в порядке предпочтения.',
+    rule: 'ru-RU на первом месте даёт 22 балла, ru — 17,6. Для остальных позиций применяется коэффициент 0,7.',
+    suggestion: 'Проверьте порядок языков в браузере. Язык интерфейса и список языков могут настраиваться отдельно.',
   },
   vendorFonts: {
     label: 'Шрифты приложений',
-    method: 'Canvas сравнивает ширину текста с YS Text, YS Display, SB Sans Text, SB Sans Display и VK Sans Display.',
-    limit: 'Шрифты могут указывать на установленное приложение. Они встречаются у пользователей разных стран. Их участие в проверках Claude не подтверждено.',
+    method: 'Проверка пяти шрифтов Яндекса, Сбера и VK по ширине текста в Canvas.',
+    rule: 'Один найденный шрифт даёт 9,96 балла. Каждый следующий увеличивает вклад до максимума в 12 баллов.',
+    suggestion: 'Найденные шрифты доступны сайтам через Canvas. Сравните результат с отдельным профилем браузера.',
   },
   webrtcLeak: {
-    label: 'WebRTC',
-    method: 'Оригинальный детектор собирает ICE-кандидаты с помощью STUN Google и ищет доступные сетевые адреса.',
-    limit: 'Адрес из ICE-кандидата сам по себе не определяет страну и может быть локальным. Это вспомогательная эвристика автора FuckClaude.',
+    label: 'Адреса WebRTC',
+    method: 'ICE-кандидаты, тип соединения и доступность адресов при запросе к STUN.',
+    rule: 'Исходная методика добавляет 5 баллов при получении сетевого адреса. Страна адреса здесь не определяется.',
+    suggestion: 'Сопоставьте публичный адрес WebRTC с выходным адресом VPN. Частные адреса показывают локальную сеть.',
   },
   cnBrowser: {
     label: 'Браузер',
-    method: 'User-Agent и UA-CH brands проверяются на маркеры Яндекс Браузера по российскому профилю оригинала.',
-    limit: 'Название браузера доступно сайтам, но использовать его можно в любой стране. Связь с решениями Claude о блокировке не подтверждена.',
+    method: 'User-Agent, данные Client Hints и маркеры Яндекс Браузера.',
+    rule: 'YaBrowser или Yowser в строке браузера дают 10 баллов.',
+    suggestion: 'Сравните результат в другом браузере. Приватное окно обычно передаёт ту же строку User-Agent.',
   },
   intlLocale: {
     label: 'Региональные форматы',
-    method: 'Используется локаль Intl.DateTimeFormat, которая определяет формат дат.',
-    limit: 'Форматы связаны с языком и настройками системы. Их вклад сохранён по исходной методике.',
+    method: 'Локаль, календарь, система цифр и примеры форматирования даты и числа.',
+    rule: 'ru-RU даёт 8 баллов, ru — 6,4. Формат даты и числа помогает увидеть применённую локаль.',
+    suggestion: 'Проверьте региональные форматы системы и браузера. Они могут отличаться от языка интерфейса.',
   },
   emoji: {
-    label: 'Платформа и emoji',
-    method: 'Исходник предполагает стиль emoji по User-Agent и платформе устройства. Изображение emoji не считывается.',
-    limit: 'Слабый косвенный признак из оригинала. Тип устройства не устанавливает страну, а использование этого признака Claude не подтверждено.',
+    label: 'Платформа',
+    method: 'Система устройства и предполагаемый поставщик emoji по данным браузера.',
+    rule: 'Косвенная эвристика оригинала с весом 4 балла. Apple даёт 1 балл, Microsoft — 1,6, Google — 1,4, Linux — 2.',
+    suggestion: '',
   },
 };
 
-export const SIGNALS = signalsFor('ru').map(signal => ({ ...signal, ...DESCRIPTIONS[signal.id] }));
+export const SIGNALS = signalsFor('ru').map(signal => ({ ...signal, ...descriptions[signal.id] }));
 
 function translateRaw(raw) {
   const values = {
-    'none detected': 'Совпадений не найдено', 'canvas unavailable': 'Canvas недоступен',
-    'no leak detected': 'Сетевые адреса не получены', 'unknown': 'Данные недоступны',
+    'none detected': 'Совпадений нет', 'canvas unavailable': 'Canvas недоступен',
+    'no leak detected': 'Адреса не получены', unknown: 'Данные недоступны',
     'Apple style': 'Apple', 'Microsoft style': 'Microsoft', 'Google style': 'Google',
-    'Linux / Other style': 'Linux / другая платформа', 'Unknown style': 'Неизвестная платформа',
+    'Linux / Other style': 'Linux', 'Unknown style': 'Неизвестная платформа',
     'Yandex Browser': 'Яндекс Браузер',
   };
-  return values[raw] || raw.replace(/^candidate leak \((.*)\)$/, 'Получены адреса ($1)');
+  return values[raw] || raw.replace(/^candidate leak \((.*)\)$/, '$1');
 }
 
 export async function detectSignal(signal, includeWebRTC) {
+  const started = performance.now();
   if (signal.id === 'webrtcLeak' && !includeWebRTC) {
-    return { id: signal.id, points: null, score: null, value: 'Выключено', reason: 'disabled' };
+    return { id: signal.id, points: null, score: null, value: 'Выключено', reason: 'disabled', details: {} };
   }
   if (signal.id === 'webrtcLeak' && !globalThis.RTCPeerConnection) {
-    return { id: signal.id, points: null, score: null, value: 'WebRTC недоступен', reason: 'unavailable' };
+    return { id: signal.id, points: null, score: null, value: 'WebRTC недоступен', reason: 'unavailable', details: {} };
   }
   try {
     const result = await signal.detect();
-    if (['unknown', 'canvas unavailable'].includes(result.raw) || !Number.isFinite(result.score)) throw new Error('Unavailable');
-    if (signal.id === 'webrtcLeak' && result.raw === 'no leak detected') {
-      return { id: signal.id, points: null, score: null, value: translateRaw(result.raw), reason: 'unavailable' };
+    if (typeof result.raw !== 'string' || ['unknown', 'canvas unavailable'].includes(result.raw)
+        || !Number.isFinite(result.score) || result.score < 0 || result.score > 1) {
+      throw new Error('Unavailable');
     }
-    return { id: signal.id, value: translateRaw(result.raw), score: result.score, points: result.score * signal.weight };
+    const elapsedMs = Math.round(performance.now() - started);
+    if (signal.id === 'webrtcLeak' && result.raw === 'no leak detected') {
+      return { id: signal.id, points: null, score: null, value: translateRaw(result.raw),
+        reason: 'unavailable', details: result.details || {}, elapsedMs };
+    }
+    return { id: signal.id, value: translateRaw(result.raw), score: result.score,
+      points: result.score * signal.weight, details: result.details || {}, elapsedMs };
   } catch {
-    return { id: signal.id, value: 'Браузер ограничил доступ к данным', points: null, score: null, reason: 'unavailable' };
+    return { id: signal.id, value: 'Данные недоступны', points: null, score: null,
+      reason: 'unavailable', details: {}, elapsedMs: Math.round(performance.now() - started) };
+  }
+}
+
+export function formatOffset(minutes) {
+  if (!Number.isFinite(minutes)) return 'Недоступно';
+  const sign = minutes >= 0 ? '+' : '−';
+  const hours = Math.floor(Math.abs(minutes) / 60);
+  const remainder = String(Math.abs(minutes) % 60).padStart(2, '0');
+  return `UTC${sign}${hours}:${remainder}`;
+}
+
+export function resultDetails(signal, result) {
+  const data = result.details || {};
+  const missing = 'Недоступно';
+  switch (signal.id) {
+    case 'timezone':
+      return [['Название', data.timezone || missing], ['Сейчас', formatOffset(data.offsetMinutes)],
+        ['В январе', formatOffset(data.januaryOffset)], ['В июле', formatOffset(data.julyOffset)]];
+    case 'language':
+      return [['Основной язык', data.primaryLanguage || missing],
+        ...(data.languages || []).map((language, index) => [`Приоритет ${index + 1}`, language])];
+    case 'vendorFonts':
+      return (data.fonts || []).map(font => [font.name, font.available ? 'Найден' : 'Не найден']);
+    case 'webrtcLeak': {
+      const scopes = { public: 'Публичный', private: 'Локальный', masked: 'Скрыт через mDNS' };
+      return [['STUN', data.stunServer || 'stun.l.google.com:19302'],
+        ...(data.candidates || []).map(candidate => [candidate.address, `${scopes[candidate.scope]} · ${candidate.type}`])];
+    }
+    case 'cnBrowser':
+      return [['Маркеры Яндекса', data.browser || 'Не найдены'],
+        ['Client Hints', (data.brands || []).map(brand => `${brand.brand} ${brand.version}`).join(', ') || missing],
+        ['User-Agent', data.userAgent || missing]];
+    case 'intlLocale':
+      return [['Локаль', data.locale || missing], ['Календарь', data.calendar || missing],
+        ['Цифры', data.numberingSystem || missing], ['Дата 15 июня 2026', data.date || missing],
+        ['Число 12345,67', data.number || missing]];
+    case 'emoji':
+      return [['Платформа', data.platform || missing], ['Поставщик emoji', data.vendor || missing],
+        ['Точек касания', String(data.touchPoints ?? missing)],
+        ['Глубина цвета', data.colorDepth ? `${data.colorDepth} бит` : missing],
+        ['Масштаб экрана', data.pixelRatio ? `${data.pixelRatio}×` : missing]];
+    default:
+      return [];
   }
 }
 
 export function summarize(results) {
   let minimum = 0;
   let unknown = 0;
+  let available = 0;
+  let matches = 0;
   for (const signal of SIGNALS) {
     const result = results.find(item => item.id === signal.id);
-    if (!result || result.points === null) unknown += signal.weight;
-    else minimum += result.points;
+    if (!result || !Number.isFinite(result.points) || result.points < 0 || result.points > signal.weight) {
+      unknown += signal.weight;
+      continue;
+    }
+    minimum += result.points;
+    available += 1;
+    if (result.score >= 0.25) matches += 1;
   }
   const lower = Math.round(minimum);
   const upper = Math.round(minimum + unknown);
-  return {
-    minimum: lower, maximum: upper, band: lower === upper ? riskBand(lower) : null,
-    available: results.filter(result => result.points !== null).length,
-    matches: results.filter(result => result.score >= 0.25).length,
-  };
+  return { minimum: lower, maximum: upper, band: lower === upper ? riskBand(lower) : null, available, matches };
 }

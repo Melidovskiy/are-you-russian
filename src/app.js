@@ -1,6 +1,7 @@
-import { SIGNALS, detectSignal, summarize } from './signals.js';
+import { SIGNALS, detectSignal, resultDetails, summarize } from './signals.js';
 
 const element = id => document.getElementById(id);
+const views = new Map();
 let scanning = false;
 let report = null;
 
@@ -11,75 +12,147 @@ function text(tag, value, className) {
   return node;
 }
 
-function renderSignals(results = []) {
-  const rows = SIGNALS.map(signal => {
-    const result = results.find(item => item.id === signal.id);
-    const row = document.createElement('details');
-    row.className = 'signal-row';
-    const summary = document.createElement('summary');
-    let state = 'Ожидает проверки';
-    if (result) state = result.reason === 'disabled' ? 'Выключено' : result.points === null ? 'Недоступно'
-      : result.score >= 0.6 ? 'Совпадение' : result.score >= 0.25 ? 'Слабый сигнал' : 'Без совпадений';
-    const status = text('span', state, 'signal-state');
-    status.dataset.kind = result?.score >= 0.25 ? 'match' : 'info';
-    const points = result?.points === undefined || result.points === null ? '—'
-      : `+${Number(result.points.toFixed(1)).toLocaleString('ru-RU')}`;
-    summary.append(text('span', signal.label, 'signal-name'), text('span', result?.value || '—', 'signal-value'), status, text('span', points, 'signal-points'));
-    const detail = document.createElement('div');
-    detail.className = 'signal-detail';
-    detail.append(text('p', signal.method), text('p', signal.limit), text('p', `Максимальный вклад — ${signal.weight} баллов.`));
-    row.append(summary, detail);
+function updateExpandButton() {
+  const expanded = [...views.values()].every(view => view.row.open);
+  element('expand').textContent = expanded ? 'Свернуть всё' : 'Развернуть всё';
+  element('expand').setAttribute('aria-expanded', String(expanded));
+}
+
+function createSignal(signal) {
+  const row = document.createElement('details');
+  row.className = 'signal-row';
+  row.dataset.signal = signal.id;
+  const summary = document.createElement('summary');
+  const heading = document.createElement('div');
+  const title = text('span', '', 'signal-title');
+  const status = text('span', 'Ожидает проверки', 'signal-state');
+  title.append(text('span', signal.label, 'signal-name'), status);
+  const value = text('span', '—', 'signal-value');
+  heading.append(title, value, text('span', signal.method, 'signal-description'));
+  const points = text('span', '—', 'points-value');
+  const contribution = text('span', '', 'signal-points');
+  contribution.append(points, text('span', `из ${signal.weight}`, 'signal-weight'));
+  const chevron = text('span', '', 'chevron');
+  chevron.setAttribute('aria-hidden', 'true');
+  summary.append(heading, contribution, chevron);
+  const detail = document.createElement('div');
+  detail.className = 'signal-detail';
+  const measurements = document.createElement('dl');
+  measurements.className = 'measurements';
+  measurements.hidden = true;
+  const notice = text('p', 'Запустите проверку, чтобы увидеть значения.', 'unavailable');
+  const suggestion = text('p', signal.suggestion, 'suggestion');
+  suggestion.hidden = true;
+  detail.append(measurements, notice, text('p', signal.rule, 'calculation'), suggestion);
+  row.append(summary, detail);
+  row.addEventListener('toggle', updateExpandButton);
+  views.set(signal.id, { row, status, value, points, measurements, notice, suggestion });
+  return row;
+}
+
+function statusFor(signal, result) {
+  if (result.reason === 'disabled') return 'Выключено';
+  if (result.points === null) return 'Недоступно';
+  if (signal.id === 'webrtcLeak') return 'Адреса получены';
+  if (signal.id === 'emoji') return 'Косвенный признак';
+  if (result.score >= 0.6) return 'Совпадение';
+  if (result.score >= 0.25) return 'Частичное совпадение';
+  return 'Без совпадений';
+}
+
+function updateSignal(signal, result) {
+  const view = views.get(signal.id);
+  view.status.textContent = statusFor(signal, result);
+  view.status.dataset.kind = result.score >= 0.25 ? 'match' : 'info';
+  view.value.textContent = result.value;
+  view.points.textContent = result.points === null ? '—' : `+${Number(result.points.toFixed(2)).toLocaleString('ru-RU')}`;
+  const entries = resultDetails(signal, result);
+  const rows = entries.map(([label, value]) => {
+    const row = text('div', '', 'measurement');
+    row.append(text('dt', label), text('dd', value));
     return row;
   });
-  element('signals').replaceChildren(...rows);
+  view.measurements.replaceChildren(...rows);
+  view.measurements.hidden = rows.length === 0 || result.reason === 'disabled';
+  view.notice.hidden = result.points !== null;
+  view.notice.textContent = 'Браузер не вернул данные. Вес этой проверки включён в верхнюю границу индекса.';
+  if (result.reason === 'disabled') view.notice.textContent = 'WebRTC выключен. В верхней границе учтены 10 непроверенных баллов.';
+  if (signal.id === 'webrtcLeak' && result.reason === 'unavailable') {
+    view.notice.textContent = 'За время проверки сетевые адреса не получены. Это может быть связано с настройками WebRTC, сетью или фильтрацией STUN.';
+  }
+  view.suggestion.hidden = !signal.suggestion || result.points === null || result.score < 0.25;
 }
 
 function renderSummary(results, finished) {
   const summary = summarize(results);
-  element('score').textContent = summary.minimum === summary.maximum ? String(summary.minimum) : `${summary.minimum}–${summary.maximum}`;
+  element('score').textContent = summary.minimum === summary.maximum
+    ? String(summary.minimum) : `${summary.minimum}–${summary.maximum}`;
+  element('score-meter').value = summary.minimum;
   const verdicts = { low: 'Низкий индекс', medium: 'Средний индекс', high: 'Высокий индекс' };
-  element('verdict').textContent = !finished ? 'Проверяем сигналы…' : verdicts[summary.band] || 'Оценка с учётом непроверенных сигналов';
-  element('score-note').textContent = `Доступно ${summary.available} из ${SIGNALS.length} проверок. Совпадений — ${summary.matches}.`;
+  element('verdict').textContent = 'Проверяем окружение…';
+  if (finished) element('verdict').textContent = verdicts[summary.band] || 'Неполная проверка';
+  element('score-note').textContent = `Доступно ${summary.available} из ${SIGNALS.length} проверок. Совпадений ${summary.matches}.`;
+  element('progress').value = results.length;
+  element('scan-state').textContent = `Обработано ${results.length} из ${SIGNALS.length}`;
   return summary;
 }
 
 element('scan').addEventListener('click', async () => {
   if (scanning) return;
   scanning = true;
+  report = null;
   element('scan').disabled = true;
+  element('scan').textContent = 'Проверяем…';
   element('include-webrtc').disabled = true;
   element('download').disabled = true;
   element('result').hidden = false;
-  element('scan-state').textContent = 'Проверяем окружение';
+  element('scan-progress').hidden = false;
   const includeWebRTC = element('include-webrtc').checked;
   const results = [];
+  for (const view of views.values()) {
+    view.status.textContent = 'Проверяем…';
+    view.status.dataset.kind = 'info';
+    view.value.textContent = '—';
+    view.points.textContent = '—';
+    view.measurements.hidden = true;
+    view.notice.hidden = true;
+    view.suggestion.hidden = true;
+  }
+  renderSummary(results, false);
   try {
     await Promise.all(SIGNALS.map(async signal => {
       const result = await detectSignal(signal, includeWebRTC);
       results.push(result);
-      renderSignals(results);
+      updateSignal(signal, result);
       renderSummary(results, false);
     }));
     const summary = renderSummary(results, true);
     report = {
-      version: 1, checkedAt: new Date().toISOString(),
+      version: 2, checkedAt: new Date().toISOString(),
       methodology: 'FuckClaude, Russian profile',
       source: 'https://github.com/LinXiaoTao/FuckClaude/tree/e730162a5482c51317732c270e2d9f68ca79c858',
       includesWebRTC: includeWebRTC, summary,
       results: SIGNALS.map(signal => ({ ...results.find(result => result.id === signal.id), weight: signal.weight })),
     };
-    element('scan-state').textContent = 'Проверка завершена';
     element('scan-message').textContent = `Проверка завершена. Индекс от ${summary.minimum} до ${summary.maximum} баллов.`;
-    element('scan').textContent = 'Проверить ещё раз';
     element('download').disabled = false;
+    element('scan-progress').hidden = true;
   } catch {
+    element('verdict').textContent = 'Проверка прервана';
+    element('scan-message').textContent = 'Запустите проверку ещё раз.';
     element('scan-state').textContent = 'Проверка прервана';
-    element('scan-message').textContent = 'Проверка прервана. Попробуйте запустить её ещё раз.';
   } finally {
     scanning = false;
     element('scan').disabled = false;
+    element('scan').textContent = 'Проверить ещё раз';
     element('include-webrtc').disabled = false;
   }
+});
+
+element('expand').addEventListener('click', () => {
+  const expand = ![...views.values()].every(view => view.row.open);
+  for (const view of views.values()) view.row.open = expand;
+  updateExpandButton();
 });
 
 element('download').addEventListener('click', () => {
@@ -93,4 +166,20 @@ element('download').addEventListener('click', () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
-renderSignals();
+function applyTheme(value) {
+  if (value === 'system') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = value;
+  document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).backgroundColor;
+}
+
+try {
+  const saved = localStorage.getItem('theme');
+  if (['light', 'dark', 'system'].includes(saved)) element('theme').value = saved;
+} catch {}
+applyTheme(element('theme').value);
+element('theme').addEventListener('change', () => {
+  applyTheme(element('theme').value);
+  try { localStorage.setItem('theme', element('theme').value); } catch {}
+});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme(element('theme').value));
+element('signals').replaceChildren(...SIGNALS.map(createSignal));

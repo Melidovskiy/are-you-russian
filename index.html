@@ -103,7 +103,7 @@
           <summary>Проверка из терминала</summary>
           <p><code>GET /api/check?format=json</code> — российский профиль по Accept-Language и User-Agent. HTTP не видит часовой пояс, шрифты, Intl и WebRTC, поэтому ответ содержит покрытие и диапазон, а не полный браузерный результат.</p>
           <p><code>GET /api/ip?format=json</code> — IP отправителя, геоданные, репутация, вычеты и состояние каждого источника. Параметр ip игнорируется. Без format=json ответ текстовый. Поддерживаются GET и OPTIONS; ограничение — 30 запросов в минуту на IP для каждого endpoint.</p>
-          <p>Пример: <code>curl -H "Accept-Language: ru-RU,ru" https://АДРЕС-САЙТА/api/check?format=json</code>. API требует Node.js-сервер или серверные функции Vercel; обычный статический хостинг его не выполняет.</p>
+          <p>Пример: <code>curl -H "Accept-Language: ru-RU,ru" https://АДРЕС-САЙТА/api/check?format=json</code>.</p>
         </details>
       </section>
       <section id="guide" class="method-section" aria-labelledby="guide-title">

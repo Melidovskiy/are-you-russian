@@ -1,4 +1,4 @@
-# Are you Russian
+# are you russian
 
 Русскоязычная адаптация [FuckClaude](https://github.com/LinXiaoTao/FuckClaude) для пользователей Claude. Проверяет признаки российского окружения по методике исходного проекта и показывает вклад каждого сигнала.
 

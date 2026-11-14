@@ -20,4 +20,5 @@ await build({
   minify: true,
   legalComments: 'none',
 });
+await cp(path.join(root, 'downloads'), path.join(destination, 'downloads'), { recursive: true });
 console.log('Готово. Статический сайт находится в dist/.');

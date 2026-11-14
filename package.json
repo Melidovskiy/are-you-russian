@@ -13,9 +13,13 @@
   "scripts": {
     "dev": "npm run build && node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
-    "test": "node --test"
+    "test": "node --test test/*.test.js",
+    "start": "node scripts/serve.mjs",
+    "extension:build": "npm --prefix extension run build && node scripts/package-extension.mjs",
+    "extension:test": "npm --prefix extension test"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "fflate": "0.8.2"
   }
 }

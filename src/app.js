@@ -1,4 +1,6 @@
 import { SIGNALS, detectSignal, resultDetails, summarize } from './signals.js';
+import { reportImage, saveBlob } from './export.js';
+import './ip.js';
 
 const element = id => document.getElementById(id);
 const views = new Map();
@@ -102,9 +104,13 @@ element('scan').addEventListener('click', async () => {
   scanning = true;
   report = null;
   element('scan').disabled = true;
-  element('scan').textContent = 'Проверяем…';
+  element('scan-label').textContent = 'Проверяем…';
+  element('scan-spinner').hidden = false;
+  element('result').setAttribute('aria-busy', 'true');
   element('include-webrtc').disabled = true;
   element('download').disabled = true;
+  element('image').disabled = true;
+  element('share').disabled = true;
   element('result').hidden = false;
   element('scan-progress').hidden = false;
   const includeWebRTC = element('include-webrtc').checked;
@@ -120,6 +126,7 @@ element('scan').addEventListener('click', async () => {
   }
   renderSummary(results, false);
   try {
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     await Promise.all(SIGNALS.map(async signal => {
       const result = await detectSignal(signal, includeWebRTC);
       results.push(result);
@@ -132,10 +139,12 @@ element('scan').addEventListener('click', async () => {
       methodology: 'FuckClaude, Russian profile',
       source: 'https://github.com/LinXiaoTao/FuckClaude/tree/e730162a5482c51317732c270e2d9f68ca79c858',
       includesWebRTC: includeWebRTC, summary,
-      results: SIGNALS.map(signal => ({ ...results.find(result => result.id === signal.id), weight: signal.weight })),
+      results: SIGNALS.map(signal => ({ ...results.find(result => result.id === signal.id), label: signal.label, weight: signal.weight })),
     };
     element('scan-message').textContent = `Проверка завершена. Индекс от ${summary.minimum} до ${summary.maximum} баллов.`;
     element('download').disabled = false;
+    element('image').disabled = false;
+    element('share').disabled = false;
     element('scan-progress').hidden = true;
   } catch {
     element('verdict').textContent = 'Проверка прервана';
@@ -144,7 +153,9 @@ element('scan').addEventListener('click', async () => {
   } finally {
     scanning = false;
     element('scan').disabled = false;
-    element('scan').textContent = 'Проверить ещё раз';
+    element('scan-label').textContent = 'Проверить ещё раз';
+    element('scan-spinner').hidden = true;
+    element('result').setAttribute('aria-busy', 'false');
     element('include-webrtc').disabled = false;
   }
 });
@@ -164,6 +175,26 @@ element('download').addEventListener('click', () => {
   link.download = 'are-you-russian-claude-report.json';
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+element('image').addEventListener('click', async () => {
+  if (!report) return;
+  try { saveBlob(await reportImage(report), 'are-you-russian.png'); }
+  catch { element('scan-message').textContent = 'Не удалось создать изображение. Можно скачать JSON.'; }
+});
+element('share').addEventListener('click', async () => {
+  if (!report) return;
+  const current = report;
+  try {
+    const file = new File([await reportImage(current)], 'are-you-russian.png', { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: 'Are you Russian' });
+    else {
+      saveBlob(file, file.name);
+      element('scan-message').textContent = 'Картинка сохранена — её можно отправить вручную.';
+    }
+  } catch (error) {
+    if (error.name !== 'AbortError') element('scan-message').textContent = 'Отправка недоступна. Сохраните PNG или JSON.';
+  }
 });
 
 function applyTheme(value) {

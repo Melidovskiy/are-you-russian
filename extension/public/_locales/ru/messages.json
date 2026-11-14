@@ -1,0 +1,227 @@
+{
+  "extName": {
+    "message": "Are you Russian — настройки сайтов"
+  },
+  "extDesc": {
+    "message": "Часовой пояс, язык и форматы для выбранных сайтов. Системная зона и IP не меняются."
+  },
+  "extAction": {
+    "message": "Настройки сайтов"
+  },
+  "master": {
+    "message": "Главный переключатель"
+  },
+  "sigTimezone": {
+    "message": "Часовой пояс"
+  },
+  "sigOffset": {
+    "message": "Смещение часового пояса"
+  },
+  "sigLanguage": {
+    "message": "Язык"
+  },
+  "sigIntl": {
+    "message": "Региональные форматы"
+  },
+  "tzLabel": {
+    "message": "Часовой пояс для сайта"
+  },
+  "langLabel": {
+    "message": "Язык для сайта"
+  },
+  "tzMeta": {
+    "message": "$ZONE$ ($OFFSET$, $NOTE$)",
+    "placeholders": {
+      "zone": {
+        "content": "$1"
+      },
+      "offset": {
+        "content": "$2"
+      },
+      "note": {
+        "content": "$3"
+      }
+    }
+  },
+  "utc8Yes": {
+    "message": "Это UTC+8"
+  },
+  "utc8No": {
+    "message": "Не UTC+8"
+  },
+  "mismatchTz": {
+    "message": "Часовой пояс и смещение включены по отдельности. Сайт может увидеть несоответствие."
+  },
+  "mismatchLocale": {
+    "message": "Язык и региональные форматы включены по отдельности. Сайт может увидеть несоответствие."
+  },
+  "apply": {
+    "message": "Применить рекомендуемое"
+  },
+  "enable": {
+    "message": "Включить"
+  },
+  "restore": {
+    "message": "Восстановить"
+  },
+  "sites": {
+    "message": "Сайты"
+  },
+  "includeSub": {
+    "message": "Включая поддомены"
+  },
+  "remove": {
+    "message": "Удалить"
+  },
+  "add": {
+    "message": "Добавить"
+  },
+  "addPlaceholder": {
+    "message": "https://example.com"
+  },
+  "suggested": {
+    "message": "Рекомендуемые"
+  },
+  "selfTest": {
+    "message": "Самопроверка"
+  },
+  "statusOn": {
+    "message": "Включено"
+  },
+  "statusOff": {
+    "message": "Выключено"
+  },
+  "statusUnauth": {
+    "message": "Доступ не выдан"
+  },
+  "statusPrefix": {
+    "message": "Эта вкладка: "
+  },
+  "refreshHint": {
+    "message": "Обновите открытые страницы для применения."
+  },
+  "unchanged": {
+    "message": "Системный часовой пояс и IP не меняются."
+  },
+  "invalidSite": {
+    "message": "Введите конкретный HTTPS-адрес. Маски и домены без схемы не принимаются."
+  },
+  "permPartial": {
+    "message": "Для части сайтов доступ не выдан."
+  },
+  "permOk": {
+    "message": "Доступ к сайтам обновлён."
+  },
+  "badgeOn": {
+    "message": "ON"
+  },
+  "badgeOff": {
+    "message": "OFF"
+  },
+  "badgeUnknown": {
+    "message": "?"
+  },
+  "sigFonts": {
+    "message": "Измерение шрифтов"
+  },
+  "sigWebrtc": {
+    "message": "Фильтр кандидатов WebRTC"
+  },
+  "uaLabel": {
+    "message": "Профиль User-Agent"
+  },
+  "uaNative": {
+    "message": "Сохранить настоящий User-Agent"
+  },
+  "uaDesktop": {
+    "message": "Chrome для компьютера (та же ОС и версия Chrome)"
+  },
+  "uaActive": {
+    "message": "Применяемый User-Agent: $UA$",
+    "placeholders": {
+      "ua": {
+        "content": "$1"
+      }
+    }
+  },
+  "uaPlatformLine": {
+    "message": "Применяемая платформа: $PLATFORM$",
+    "placeholders": {
+      "platform": {
+        "content": "$1"
+      }
+    }
+  },
+  "cnBrowserHit": {
+    "message": "Обнаружен региональный браузер: $NAME$.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "cnBrowserClear": {
+    "message": "Региональный браузер не обнаружен."
+  },
+  "cnDeviceHit": {
+    "message": "Обнаружено региональное устройство: $NAME$.",
+    "placeholders": {
+      "name": {
+        "content": "$1"
+      }
+    }
+  },
+  "cnDeviceClear": {
+    "message": "Региональное устройство не обнаружено."
+  },
+  "uaSuggestOn": {
+    "message": "Рекомендуемая настройка выберет Chrome для компьютера."
+  },
+  "uaSuggestOff": {
+    "message": "Рекомендуемая настройка сохранит настоящий User-Agent."
+  },
+  "fontHint": {
+    "message": "Изменяются только canvas measureText и fonts.check. Вёрстка и пиксели не меняются. Шрифты остаются установленными."
+  },
+  "webrtcHint": {
+    "message": "На выбранных сайтах удаляются кандидаты host, srflx и prflx с IP. Relay и mDNS сохраняются. Адреса не подставляются."
+  },
+  "emojiHint": {
+    "message": "Стиль emoji зависит от User-Agent и платформы. Методика всё равно начисляет минимум 1–2 балла."
+  },
+  "policyTitle": {
+    "message": "Политика WebRTC для всего браузера"
+  },
+  "policyBody": {
+    "message": "Запрещает UDP вне прокси на всех сайтах браузера. Разрешение можно отозвать."
+  },
+  "policyOpen": {
+    "message": "Настроить политику браузера"
+  },
+  "policyConfirm": {
+    "message": "Подтверждаю: отключить UDP вне прокси на всех сайтах"
+  },
+  "policyRevoke": {
+    "message": "Отозвать"
+  },
+  "policyNow": {
+    "message": "Текущая политика: $VALUE$",
+    "placeholders": {
+      "value": {
+        "content": "$1"
+      }
+    }
+  },
+  "policyNone": {
+    "message": "Доступ не выдан"
+  },
+  "policyDenied": {
+    "message": "Разрешение не выдано. Политика не изменена."
+  },
+  "policyBlocked": {
+    "message": "Политика управляется извне и не изменена."
+  },
+  "policyNeedConfirm": {
+    "message": "Сначала подтвердите. Настройка затрагивает все сайты и может быть отменена."
+  }
+}

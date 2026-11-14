@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { apiResponse } from '../src/server/api.js';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const port = Number(process.env.PORT || 4321);
@@ -11,6 +12,15 @@ const types = {
 };
 
 const server = createServer(async (request, response) => {
+  let url;
+  try { url = new URL(request.url, 'http://localhost'); }
+  catch { response.writeHead(400).end('Bad request'); return; }
+  if (['/api/ip', '/api/check'].includes(url.pathname)) {
+    const result = await apiResponse(url.pathname, new Request(url, { method: request.method, headers: request.headers }), request.socket.remoteAddress);
+    response.writeHead(result.status, Object.fromEntries(result.headers));
+    response.end(Buffer.from(await result.arrayBuffer()));
+    return;
+  }
   if (!['GET', 'HEAD'].includes(request.method)) {
     response.writeHead(405, { Allow: 'GET, HEAD' }).end();
     return;
@@ -18,7 +28,7 @@ const server = createServer(async (request, response) => {
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
-    if (relative.includes('\\') || !/^(?:index\.html|app\.js|LICENSE|(?:src|assets)\/[^.][^\0]*)$/.test(relative)) {
+    if (relative.includes('\\') || !/^(?:index\.html|app\.js|LICENSE|(?:src|assets|downloads)\/[^.][^\0]*)$/.test(relative)) {
       response.writeHead(404).end('Not found');
       return;
     }
@@ -38,4 +48,4 @@ const server = createServer(async (request, response) => {
     response.writeHead(404).end('Not found');
   }
 });
-server.listen(port, '127.0.0.1', () => console.log(`http://127.0.0.1:${port}`));
+server.listen(port, process.env.HOST || '127.0.0.1', () => console.log(`http://127.0.0.1:${port}`));

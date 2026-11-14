@@ -45,10 +45,10 @@ test('непроверенный сигнал расширяет диапазо�
   assert.equal(summarize([]).maximum, 100);
 });
 
-test('вклады складываются до округления, как в оригинале', () => {
+test('вклад каждой проверки округляется перед сложением, как в оригинале', () => {
   const results = SIGNALS.map(signal => ({ id: signal.id, points: signal.id === 'language' ? 17.6 : signal.id === 'emoji' ? 1.6 : 0, score: 0 }));
-  assert.equal(summarize(results).minimum, 19);
-  assert.equal(summarize(results).maximum, 19);
+  assert.equal(summarize(results).minimum, 20);
+  assert.equal(summarize(results).maximum, 20);
 });
 
 test('выключенный WebRTC не запускает детектор', async () => {
@@ -91,7 +91,7 @@ test('отчёт сохраняет подробности и время изм�
   const result = await detectSignal({ id: 'language', weight: 22,
     detect: () => ({ raw: 'en-us, ru-ru', score: 0.7, details }) }, false);
   assert.deepEqual(result.details, details);
-  assert.equal(Number(result.points.toFixed(1)), 15.4);
+  assert.equal(result.points, 15);
   assert.ok(Number.isFinite(result.elapsedMs));
 });
 

@@ -10,13 +10,13 @@ const descriptions = {
   language: {
     label: 'Языки браузера',
     method: 'Основной язык и полный список языков в порядке предпочтения.',
-    rule: 'ru-RU на первом месте даёт 22 балла, ru — 17,6. Для остальных позиций применяется коэффициент 0,7.',
+    rule: 'ru-RU на первом месте даёт 22 балла, ru — 18. Для остальных позиций применяется коэффициент 0,7. Вклад каждой проверки округляется до целого.',
     suggestion: 'Проверьте порядок языков в браузере. Язык интерфейса и список языков могут настраиваться отдельно.',
   },
   vendorFonts: {
     label: 'Шрифты приложений',
     method: 'Проверка пяти шрифтов Яндекса, Сбера и VK по ширине текста в Canvas.',
-    rule: 'Один найденный шрифт даёт 9,96 балла. Каждый следующий увеличивает вклад до максимума в 12 баллов.',
+    rule: 'Один найденный шрифт даёт 10 баллов, два — 11, три и больше — 12.',
     suggestion: 'Найденные шрифты доступны сайтам через Canvas. Сравните результат с отдельным профилем браузера.',
   },
   webrtcLeak: {
@@ -34,13 +34,13 @@ const descriptions = {
   intlLocale: {
     label: 'Региональные форматы',
     method: 'Локаль, календарь, система цифр и примеры форматирования даты и числа.',
-    rule: 'ru-RU даёт 8 баллов, ru — 6,4. Формат даты и числа помогает увидеть применённую локаль.',
+    rule: 'ru-RU даёт 8 баллов, ru — 6. Формат даты и числа помогает увидеть применённую локаль.',
     suggestion: 'Проверьте региональные форматы системы и браузера. Они могут отличаться от языка интерфейса.',
   },
   emoji: {
     label: 'Платформа',
     method: 'Система устройства и предполагаемый поставщик emoji по данным браузера.',
-    rule: 'Косвенная эвристика оригинала с весом 4 балла. Apple даёт 1 балл, Microsoft — 1,6, Google — 1,4, Linux — 2.',
+    rule: 'Косвенная эвристика оригинала с весом 4 балла. Apple и Google дают 1 балл, Microsoft и Linux — 2.',
     suggestion: '',
   },
 };
@@ -78,7 +78,7 @@ export async function detectSignal(signal, includeWebRTC) {
         reason: 'unavailable', details: result.details || {}, elapsedMs };
     }
     return { id: signal.id, value: translateRaw(result.raw), score: result.score,
-      points: result.score * signal.weight, details: result.details || {}, elapsedMs };
+      points: Math.round(result.score * signal.weight), details: result.details || {}, elapsedMs };
   } catch {
     return { id: signal.id, value: 'Данные недоступны', points: null, score: null,
       reason: 'unavailable', details: {}, elapsedMs: Math.round(performance.now() - started) };
@@ -139,7 +139,7 @@ export function summarize(results) {
       unknown += signal.weight;
       continue;
     }
-    minimum += result.points;
+    minimum += Math.round(result.points);
     available += 1;
     if (result.score >= 0.25) matches += 1;
   }

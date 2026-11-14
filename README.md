@@ -1,4 +1,4 @@
-# Are you Russian
+# are you russian
 
 Проверка браузерного окружения и выходного IP для пользователей Claude. Русскоязычная адаптация [FuckClaude](https://github.com/LinXiaoTao/FuckClaude), исходная версия — [`e730162`](https://github.com/LinXiaoTao/FuckClaude/tree/e730162a5482c51317732c270e2d9f68ca79c858).
 

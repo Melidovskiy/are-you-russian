@@ -4,7 +4,6 @@ export const guideCategories = {
   environment: 'Браузер, устройства и сеть',
   api: 'Claude Code и API',
   appeal: 'Ошибки и восстановление',
-  alternatives: 'Альтернативы и резервный доступ',
 };
 
 export const guideSources = {
@@ -13,12 +12,10 @@ export const guideSources = {
   billing: { title: 'Claude Help Center — оплата подписки', url: 'https://support.claude.com/en/articles/8325618-paid-plan-billing-faqs' },
   declined: { title: 'Claude Help Center — отказ в оплате', url: 'https://support.claude.com/en/articles/9402418-why-was-my-card-declined' },
   errors: { title: 'Claude API — ошибки и request ID', url: 'https://platform.claude.com/docs/en/api/errors' },
-  limits: { title: 'Claude API — ограничения запросов и расходов', url: 'https://platform.claude.com/docs/en/api/rate-limits' },
   settings: { title: 'Claude Code — настройки и их приоритет', url: 'https://code.claude.com/docs/en/settings' },
   gateways: { title: 'Claude Code — подключение через шлюз', url: 'https://code.claude.com/docs/en/llm-gateway' },
   status: { title: 'Claude — состояние сервисов', url: 'https://status.claude.com/' },
   upstream: { title: 'FuckClaude — исходный проект и разбор признаков', url: 'https://github.com/LinXiaoTao/FuckClaude' },
-  ollama: { title: 'Ollama — документация', url: 'https://docs.ollama.com/' },
 };
 
 export const guides = [
@@ -35,16 +32,8 @@ export const guides = [
     title: 'Регистрация, номер телефона и платёжные данные',
     summary: 'Доступ к почте и номеру, управление собственным аккаунтом и подготовка к оплате без потери контроля над учётной записью.',
     keywords: 'регистрация номер телефон sms sim voip billing',
-    related: ['regional-access-strategy', 'payment-methods-comparison', 'multi-account-management'],
+    related: ['regional-access-strategy', 'payment-methods-comparison', 'account-appeal-and-recovery-sop'],
     sources: ['regions', 'billing', 'declined'],
-  },
-  {
-    slug: 'multi-account-management', category: 'account',
-    title: 'Личный и рабочий аккаунты',
-    summary: 'Раздельные профили браузера, организации и ключи API. Как проверить, от чьего имени идёт запрос и кто оплачивает использование.',
-    keywords: 'профили организация команда ключи аккаунты',
-    related: ['claude-code-and-api-safety', 'automation-safety-practices', 'account-appeal-and-recovery-sop'],
-    sources: ['settings', 'appeals', 'billing'],
   },
   {
     slug: 'payment-methods-comparison', category: 'account',
@@ -59,7 +48,7 @@ export const guides = [
     title: 'Россия, поддерживаемые регионы и поездки',
     summary: 'Как читать региональную политику Anthropic и учитывать фактическое местонахождение, организацию и платёжный регион.',
     keywords: 'россия регион страна поездка переезд местонахождение',
-    related: ['antiban-essentials', 'payment-methods-comparison', 'domestic-and-open-source-alternatives'],
+    related: ['antiban-essentials', 'payment-methods-comparison', 'environment-cleanup-and-ip-setup'],
     sources: ['regions', 'appeals'],
   },
   {
@@ -91,7 +80,7 @@ export const guides = [
     title: 'Настройка Chrome, Firefox и Edge',
     summary: 'Языки, часовой пояс, профили, WebRTC и расширение проекта. Как менять параметры последовательно и проверять результат.',
     keywords: 'chrome firefox edge chromium расширение язык браузер',
-    related: ['environment-cleanup-and-ip-setup', 'device-setup-guide', 'multi-account-management'],
+    related: ['environment-cleanup-and-ip-setup', 'device-setup-guide', 'claude-code-and-api-safety'],
     sources: ['upstream'],
   },
   {
@@ -112,34 +101,18 @@ export const guides = [
   },
   {
     slug: 'claude-code-and-api-safety', category: 'api',
-    title: 'Claude Code, шлюзы и безопасность API-ключей',
-    summary: 'Проверка способа входа и настроек клиента, работа через LLM-шлюз и защита ключей в репозитории и журналах.',
-    keywords: 'claude code cli api ключ base url gateway env',
-    related: ['api-advanced-optimization', 'automation-safety-practices', 'multi-account-management'],
+    title: 'Региональные настройки и доступ в Claude Code',
+    summary: 'Проверка окружения терминала, настроек клиента и маршрута запросов к Claude. Диагностика доступа через шлюз.',
+    keywords: 'claude code cli api регион сеть proxy gateway env',
+    related: ['environment-cleanup-and-ip-setup', 'vpn-and-proxy-selection', 'troubleshooting-guide'],
     sources: ['settings', 'gateways', 'errors'],
-  },
-  {
-    slug: 'api-advanced-optimization', category: 'api',
-    title: 'Токены, кеш и стоимость API',
-    summary: 'Как измерять расход, сохранять повторяемую часть контекста и отличать ограничения скорости от ограничения бюджета.',
-    keywords: 'токены tokens кеш cache стоимость бюджет лимиты',
-    related: ['automation-safety-practices', 'claude-code-and-api-safety', 'domestic-and-open-source-alternatives'],
-    sources: ['limits', 'errors'],
-  },
-  {
-    slug: 'automation-safety-practices', category: 'api',
-    title: 'Очереди запросов, 429 и безопасные повторы',
-    summary: 'Ограничение параллелизма, retry-after, повторы с задержкой и защита операций с внешними побочными эффектами.',
-    keywords: 'автоматизация batch очередь 429 retry backoff параллелизм',
-    related: ['api-advanced-optimization', 'claude-code-and-api-safety', 'troubleshooting-guide'],
-    sources: ['limits', 'errors'],
   },
   {
     slug: 'account-appeal-and-recovery-sop', category: 'appeal',
     title: 'Блокировка аккаунта и обращение в поддержку',
     summary: 'Сохранение данных, сбор фактов, форма апелляции и шаблон сообщения на английском с полями для собственных сведений.',
     keywords: 'бан appeal апелляция поддержка английский восстановление экспорт',
-    related: ['ban-case-studies', 'troubleshooting-guide', 'domestic-and-open-source-alternatives'],
+    related: ['ban-case-studies', 'troubleshooting-guide', 'regional-access-strategy'],
     sources: ['appeals', 'billing'],
   },
   {
@@ -147,16 +120,8 @@ export const guides = [
     title: 'Диагностика 403, 429, Timeout и ошибок входа',
     summary: 'Разбор сетевых сбоев, HTTP-ошибок и ограничений аккаунта с порядком проверок и шаблоном диагностического отчёта.',
     keywords: '403 401 429 529 timeout dns tls ошибка вход сеть',
-    related: ['vpn-and-proxy-selection', 'account-appeal-and-recovery-sop', 'automation-safety-practices'],
+    related: ['vpn-and-proxy-selection', 'account-appeal-and-recovery-sop', 'ban-case-studies'],
     sources: ['errors', 'status', 'appeals'],
-  },
-  {
-    slug: 'domestic-and-open-source-alternatives', category: 'alternatives',
-    title: 'Альтернативные модели и локальный резерв',
-    summary: 'Сравнение доступных облачных сервисов и локальных моделей, проверка совместимости API и подготовка резервного рабочего процесса.',
-    keywords: 'альтернативы ollama локальные модели qwen deepseek glm kimi русский',
-    related: ['api-advanced-optimization', 'claude-code-and-api-safety', 'regional-access-strategy'],
-    sources: ['ollama', 'regions'],
   },
 ];
 
@@ -164,7 +129,7 @@ export const readingPaths = [
   { title: 'Первая проверка', slug: 'antiban-essentials', summary: 'Начните с короткого маршрута по настройкам и ошибкам.' },
   { title: 'Браузер и сеть', slug: 'environment-cleanup-and-ip-setup', summary: 'Разберите часовой пояс, WebRTC и выходной IP.' },
   { title: 'Регистрация и оплата', slug: 'account-registration-and-payment-antiban', summary: 'Проверьте доступность сервиса и данные аккаунта.' },
-  { title: 'Работа с Claude Code', slug: 'claude-code-and-api-safety', summary: 'Проверьте клиент, шлюз и хранение ключей.' },
+  { title: 'Работа с Claude Code', slug: 'claude-code-and-api-safety', summary: 'Проверьте окружение клиента и маршрут запросов.' },
   { title: 'Проблемы с доступом', slug: 'troubleshooting-guide', summary: 'Сопоставьте симптомы и результаты контрольных тестов.' },
   { title: 'Аккаунт заблокирован', slug: 'account-appeal-and-recovery-sop', summary: 'Соберите факты и подготовьте обращение.' },
 ];

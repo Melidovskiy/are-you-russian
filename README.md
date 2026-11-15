@@ -12,16 +12,15 @@
 
 ## Руководства
 
-[Каталог из 17 руководств](https://are-you-russian.vercel.app/guides/) с поиском, фильтром по теме и маршрутами чтения. В каждой статье есть содержание, источники, дата редакции и связанные материалы. Примеры адаптированы для русскоязычных пользователей.
+[Каталог из 13 руководств](https://are-you-russian.vercel.app/guides/) с поиском, фильтром по теме и маршрутами чтения. В каждой статье есть содержание, источники, дата редакции и связанные материалы. Примеры адаптированы для русскоязычных пользователей.
 
 | Тема | С чего начать |
 | --- | --- |
-| Аккаунт и оплата | [Первая проверка](https://are-you-russian.vercel.app/guides/antiban-essentials/), [регистрация и номер телефона](https://are-you-russian.vercel.app/guides/account-registration-and-payment-antiban/), [оплата и отказ по карте](https://are-you-russian.vercel.app/guides/payment-methods-comparison/), [личный и рабочий аккаунты](https://are-you-russian.vercel.app/guides/multi-account-management/), [Россия и поддерживаемые регионы](https://are-you-russian.vercel.app/guides/regional-access-strategy/) |
+| Аккаунт и оплата | [Первая проверка](https://are-you-russian.vercel.app/guides/antiban-essentials/), [регистрация и номер телефона](https://are-you-russian.vercel.app/guides/account-registration-and-payment-antiban/), [оплата и отказ по карте](https://are-you-russian.vercel.app/guides/payment-methods-comparison/), [Россия и поддерживаемые регионы](https://are-you-russian.vercel.app/guides/regional-access-strategy/) |
 | Региональные признаки | [Что известно о проверках Claude](https://are-you-russian.vercel.app/guides/claude-steganography-and-risk-model/), [разбор случаев блокировки](https://are-you-russian.vercel.app/guides/ban-case-studies/) |
 | Браузер и сеть | [Российское окружение](https://are-you-russian.vercel.app/guides/environment-cleanup-and-ip-setup/), [Chrome, Firefox и Edge](https://are-you-russian.vercel.app/guides/browser-configuration-guide/), [VPN и прокси](https://are-you-russian.vercel.app/guides/vpn-and-proxy-selection/), [настройки устройств](https://are-you-russian.vercel.app/guides/device-setup-guide/) |
-| Claude Code и API | [Конфигурация и ключи](https://are-you-russian.vercel.app/guides/claude-code-and-api-safety/), [токены и стоимость](https://are-you-russian.vercel.app/guides/api-advanced-optimization/), [очереди и повторы](https://are-you-russian.vercel.app/guides/automation-safety-practices/) |
+| Claude Code и API | [Региональные настройки и доступ](https://are-you-russian.vercel.app/guides/claude-code-and-api-safety/) |
 | Ошибки и восстановление | [Диагностика ошибок](https://are-you-russian.vercel.app/guides/troubleshooting-guide/), [апелляция и шаблон обращения](https://are-you-russian.vercel.app/guides/account-appeal-and-recovery-sop/) |
-| Резерв | [Альтернативные модели и локальное выполнение](https://are-you-russian.vercel.app/guides/domestic-and-open-source-alternatives/) |
 
 ## Проверки
 

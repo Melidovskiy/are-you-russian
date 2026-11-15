@@ -71,7 +71,7 @@ export async function buildGuides(root, destination) {
   const hub = `
     <section class="guides-intro">
       <h1>Руководства по Claude</h1>
-      <p class="lead">Браузер, сеть, аккаунт и API — инструкции и диагностика для русскоязычных пользователей.</p>
+      <p class="lead">Региональные признаки, доступ к Claude и диагностика блокировок.</p>
       <p>Раздел адаптирован по темам FuckClaude. Примеры учитывают российские региональные настройки. В статьях указаны первоисточники и дата редакции.</p>
     </section>
     <section class="official-rules" aria-labelledby="rules-title">

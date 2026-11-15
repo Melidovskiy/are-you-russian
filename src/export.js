@@ -1,3 +1,5 @@
+import { networkTypeLabel } from './ip.js';
+
 export function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -11,7 +13,7 @@ export async function reportImage(report) {
   await document.fonts.ready;
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
-  canvas.height = 490 + report.results.length * 58;
+  canvas.height = 490 + report.results.length * 58 + (report.ip ? 170 : 0);
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#f8f9fa';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -20,7 +22,9 @@ export async function reportImage(report) {
   ctx.fillText('are you russian', 70, 85);
   ctx.font = '28px Roboto, sans-serif';
   ctx.fillText('Браузерное окружение для Claude', 70, 145);
-  ctx.fillStyle = '#d66b00';
+  ctx.font = '20px Roboto, sans-serif';
+  ctx.fillText('Индекс российских настроек', 70, 190);
+  ctx.fillStyle = '#c96442';
   ctx.font = '500 76px Roboto, sans-serif';
   ctx.fillText(`${report.summary.minimum}–${report.summary.maximum} / 100`, 70, 250);
   ctx.fillStyle = '#181818';
@@ -30,6 +34,22 @@ export async function reportImage(report) {
     ctx.fillText(result.label || result.id, 70, y);
     ctx.fillText(`${result.points ?? '—'} / ${result.weight}`, 990, y);
   });
+  if (report.ip) {
+    const y = 350 + report.results.length * 58;
+    ctx.font = '24px Roboto, sans-serif';
+    ctx.fillText('Репутация IP', 70, y);
+    if (report.ip.status === 'ok') {
+      const body = report.ip.result;
+      ctx.fillStyle = '#c96442';
+      ctx.font = '500 36px Roboto, sans-serif';
+      ctx.fillText(body.purity === null ? 'Недостаточно данных' : `${body.purity} / 100`, 70, y + 50);
+      ctx.fillStyle = '#626262';
+      ctx.font = '20px Roboto, sans-serif';
+      ctx.fillText(`${networkTypeLabel(body.network.type)}. Репутация IP: выше — лучше.`, 70, y + 88);
+    } else {
+      ctx.fillText('Проверка IP недоступна', 70, y + 50);
+    }
+  }
   ctx.fillStyle = '#626262';
   ctx.font = '20px Roboto, sans-serif';
   ctx.fillText('Индекс настроек, не вероятность блокировки аккаунта.', 70, canvas.height - 100);

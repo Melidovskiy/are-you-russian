@@ -35,12 +35,12 @@
     </header>
     <main id="main" class="shell">
       <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">Что ваш браузер<br class="desktop-break"> рассказывает Claude о регионе</h1>
-        <p class="lead">Проверьте часовой пояс, языки и другие настройки, по которым ваше окружение может выглядеть российским.</p>
+        <h1 id="page-title">Проверка браузера<br class="desktop-break"> для Claude</h1>
+        <p class="lead">Проверьте, какие настройки вашего браузера указывают на российский регион.</p>
         <div class="actions">
           <button id="scan" class="button primary" type="button">
             <span id="scan-spinner" class="scan-spinner" aria-hidden="true" hidden></span>
-            <span id="scan-label">Проверить окружение</span>
+            <span id="scan-label">Начать проверку</span>
           </button>
           <a class="button secondary" href="#method">Как считается индекс</a>
         </div>
@@ -51,7 +51,7 @@
           </span>
           <span>Проверить WebRTC</span>
         </label>
-        <p id="webrtc-note" class="local-note">WebRTC обращается к STUN-серверу Google. Остальные проверки выполняются локально.</p>
+        <p id="webrtc-note" class="local-note">Проверка IP обращается к внешним источникам репутации. При включённом WebRTC также используется STUN-сервер Google.</p>
         <div id="result" class="result-panel" hidden>
           <div class="score-block">
             <span class="score-label">Индекс российских настроек</span>
@@ -62,11 +62,15 @@
             <p id="verdict" class="verdict">Проверяем окружение</p>
             <p id="score-note" class="score-note"></p>
             <p class="score-caption">Индекс учитывает браузерные признаки по методике FuckClaude. Внутренняя оценка аккаунта Anthropic странице недоступна.</p>
-            <div class="report-actions">
-              <button id="download" class="text-button" type="button" disabled>Скачать JSON-отчёт</button>
-              <button id="image" class="text-button" type="button" disabled>Сохранить PNG</button>
-              <button id="share" class="text-button" type="button" disabled>Поделиться</button>
-            </div>
+          </div>
+          <section id="ip" class="result-ip" aria-labelledby="ip-title">
+            <h2 id="ip-title">IP и репутация сети</h2>
+            <div id="ip-result" role="status"></div>
+          </section>
+          <div class="report-actions">
+            <button id="download" class="text-button" type="button" disabled>Скачать JSON-отчёт</button>
+            <button id="image" class="text-button" type="button" disabled>Сохранить PNG</button>
+            <button id="share" class="text-button" type="button" disabled>Поделиться</button>
           </div>
           <div id="scan-progress" class="scan-progress">
             <label id="scan-state" for="progress">Проверяем окружение</label>
@@ -83,12 +87,6 @@
         </div>
         <p class="section-description">В каждой проверке — полученные значения, вклад в индекс и способ расчёта.</p>
         <div id="signals" class="signal-list"></div>
-      </section>
-      <section id="ip" class="method-section" aria-labelledby="ip-title">
-        <h2 id="ip-title">Выходной IP и репутация</h2>
-        <p>Отдельная проверка сети: страна, ASN, признаки VPN, прокси и жалоб. По вашему запросу сервер передаёт выходной IP сервисам proxycheck.io и AbuseIPDB, если настроены ключи, и ipwho.is для геоданных. Ключи остаются на сервере.</p>
-        <button id="check-ip" class="button primary" type="button">Проверить IP</button>
-        <div id="ip-result" class="ip-result" role="status" hidden></div>
       </section>
       <section id="tools" class="method-section" aria-labelledby="tools-title">
         <h2 id="tools-title">Расширение и HTTP API</h2>
@@ -128,7 +126,8 @@
         </details>
         <details class="method-details">
           <summary>Куда отправляются результаты?</summary>
-          <p>Браузерные результаты, JSON и PNG создаются на устройстве. В JSON могут быть адреса WebRTC. STUN-сервер Google получает сетевой адрес запроса. Проверка IP запускается отдельно и передаёт адрес внешним источникам, перечисленным в её разделе. Сервер хранит результаты IP в памяти до 8 минут и счётчики ограничения запросов; при перезапуске они сбрасываются. Хостинг получает обычные сетевые запросы.</p>
+          <p>По нажатию «Начать проверку» сервер передаёт выходной IP сервисам proxycheck.io и AbuseIPDB, если настроены ключи, и ipwho.is для геоданных. При включённом WebRTC STUN-сервер Google также получает сетевой адрес запроса. Остальные измерения выполняются в браузере.</p>
+          <p>JSON и PNG создаются на устройстве. JSON содержит выходной IP и может включать адреса WebRTC. В PNG сохраняются баллы и тип сети. Сервер хранит результаты IP в памяти до 8 минут и счётчики ограничения запросов; при перезапуске они сбрасываются. Хостинг получает обычные сетевые запросы.</p>
           <p>Сайт запоминает только выбранную цветовую тему.</p>
         </details>
       </section>

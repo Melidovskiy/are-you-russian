@@ -1,6 +1,6 @@
 import { SIGNALS, detectSignal, resultDetails, summarize } from './signals.js';
 import { reportImage, saveBlob } from './export.js';
-import './ip.js';
+import { checkIp, renderIp } from './ip.js';
 
 const element = id => document.getElementById(id);
 const views = new Map();
@@ -113,6 +113,11 @@ element('scan').addEventListener('click', async () => {
   element('share').disabled = true;
   element('result').hidden = false;
   element('scan-progress').hidden = false;
+  element('ip-result').textContent = 'Проверяем IP и запрашиваем источники репутации…';
+  const ipCheck = checkIp().then(outcome => {
+    renderIp(element('ip-result'), outcome);
+    return outcome;
+  });
   const includeWebRTC = element('include-webrtc').checked;
   const results = [];
   for (const view of views.values()) {
@@ -134,14 +139,17 @@ element('scan').addEventListener('click', async () => {
       renderSummary(results, false);
     }));
     const summary = renderSummary(results, true);
+    element('scan-state').textContent = 'Завершаем проверку IP…';
+    const ip = await ipCheck;
     report = {
-      version: 2, checkedAt: new Date().toISOString(),
+      version: 3, checkedAt: new Date().toISOString(),
       methodology: 'FuckClaude, Russian profile',
       source: 'https://github.com/LinXiaoTao/FuckClaude/tree/e730162a5482c51317732c270e2d9f68ca79c858',
-      includesWebRTC: includeWebRTC, summary,
+      includesWebRTC: includeWebRTC, summary, ip,
       results: SIGNALS.map(signal => ({ ...results.find(result => result.id === signal.id), label: signal.label, weight: signal.weight })),
     };
-    element('scan-message').textContent = `Проверка завершена. Индекс от ${summary.minimum} до ${summary.maximum} баллов.`;
+    const ipMessage = ip.status === 'ok' ? 'Результат проверки IP получен.' : 'Проверка IP недоступна.';
+    element('scan-message').textContent = `Проверка завершена. Индекс от ${summary.minimum} до ${summary.maximum} баллов. ${ipMessage}`;
     element('download').disabled = false;
     element('image').disabled = false;
     element('share').disabled = false;

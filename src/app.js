@@ -102,6 +102,7 @@ function renderSummary(results, finished) {
 element('scan').addEventListener('click', async () => {
   if (scanning) return;
   scanning = true;
+  const minimumDuration = new Promise(resolve => setTimeout(resolve, 2000));
   report = null;
   element('scan').disabled = true;
   element('scan-label').textContent = 'Проверяем…';
@@ -112,12 +113,10 @@ element('scan').addEventListener('click', async () => {
   element('image').disabled = true;
   element('share').disabled = true;
   element('result').hidden = false;
+  element('report-results').hidden = true;
   element('scan-progress').hidden = false;
   element('ip-result').textContent = 'Проверяем IP и запрашиваем источники репутации…';
-  const ipCheck = checkIp().then(outcome => {
-    renderIp(element('ip-result'), outcome);
-    return outcome;
-  });
+  const ipCheck = checkIp();
   const includeWebRTC = element('include-webrtc').checked;
   const results = [];
   for (const view of views.values()) {
@@ -135,12 +134,17 @@ element('scan').addEventListener('click', async () => {
     await Promise.all(SIGNALS.map(async signal => {
       const result = await detectSignal(signal, includeWebRTC);
       results.push(result);
-      updateSignal(signal, result);
-      renderSummary(results, false);
+      element('progress').value = results.length;
+      element('scan-state').textContent = `Обработано ${results.length} из ${SIGNALS.length}`;
     }));
+    element('scan-state').textContent = 'Собираем результаты…';
+    element('progress').removeAttribute('value');
+    const [ip] = await Promise.all([ipCheck, minimumDuration]);
+    for (const signal of SIGNALS) {
+      updateSignal(signal, results.find(result => result.id === signal.id));
+    }
+    renderIp(element('ip-result'), ip);
     const summary = renderSummary(results, true);
-    element('scan-state').textContent = 'Завершаем проверку IP…';
-    const ip = await ipCheck;
     report = {
       version: 3, checkedAt: new Date().toISOString(),
       methodology: 'FuckClaude, Russian profile',
@@ -154,6 +158,7 @@ element('scan').addEventListener('click', async () => {
     element('image').disabled = false;
     element('share').disabled = false;
     element('scan-progress').hidden = true;
+    element('report-results').hidden = false;
   } catch {
     element('verdict').textContent = 'Проверка прервана';
     element('scan-message').textContent = 'Запустите проверку ещё раз.';

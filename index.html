@@ -53,24 +53,26 @@
         </label>
         <p id="webrtc-note" class="local-note">Проверка IP обращается к внешним источникам репутации. При включённом WebRTC также используется STUN-сервер Google.</p>
         <div id="result" class="result-panel" hidden>
-          <div class="score-block">
-            <span class="score-label">Индекс российских настроек</span>
-            <div class="score-line"><span id="score" class="score">—</span><span class="score-unit">/ 100</span></div>
-            <meter id="score-meter" min="0" max="100" low="30" high="60" optimum="0" value="0" aria-label="Индекс российских настроек"></meter>
-          </div>
-          <div class="result-copy">
-            <p id="verdict" class="verdict">Проверяем окружение</p>
-            <p id="score-note" class="score-note"></p>
-            <p class="score-caption">Индекс учитывает браузерные признаки по методике FuckClaude. Внутренняя оценка аккаунта Anthropic странице недоступна.</p>
-          </div>
-          <section id="ip" class="result-ip" aria-labelledby="ip-title">
-            <h2 id="ip-title">IP и репутация сети</h2>
-            <div id="ip-result" role="status"></div>
-          </section>
-          <div class="report-actions">
-            <button id="download" class="text-button" type="button" disabled>Скачать JSON-отчёт</button>
-            <button id="image" class="text-button" type="button" disabled>Сохранить PNG</button>
-            <button id="share" class="text-button" type="button" disabled>Поделиться</button>
+          <div id="report-results" class="report-results" hidden>
+            <div class="score-block">
+              <span class="score-label">Индекс российских настроек</span>
+              <div class="score-line"><span id="score" class="score">—</span><span class="score-unit">/ 100</span></div>
+              <meter id="score-meter" min="0" max="100" low="30" high="60" optimum="0" value="0" aria-label="Индекс российских настроек"></meter>
+            </div>
+            <div class="result-copy">
+              <p id="verdict" class="verdict">Проверяем окружение</p>
+              <p id="score-note" class="score-note"></p>
+              <p class="score-caption">Индекс учитывает браузерные признаки по методике FuckClaude. Внутренняя оценка аккаунта Anthropic странице недоступна.</p>
+            </div>
+            <section id="ip" class="result-ip" aria-labelledby="ip-title">
+              <h2 id="ip-title">IP и репутация сети</h2>
+              <div id="ip-result" role="status"></div>
+            </section>
+            <div class="report-actions">
+              <button id="download" class="text-button" type="button" disabled>Скачать JSON-отчёт</button>
+              <button id="image" class="text-button" type="button" disabled>Сохранить PNG</button>
+              <button id="share" class="text-button" type="button" disabled>Поделиться</button>
+            </div>
           </div>
           <div id="scan-progress" class="scan-progress">
             <label id="scan-state" for="progress">Проверяем окружение</label>

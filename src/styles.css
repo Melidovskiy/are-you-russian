@@ -118,6 +118,7 @@ h1 { font-size: clamp(31px, 4.1vw, 44px); font-weight: 650; letter-spacing: -.8p
 .scan-spinner { width: 17px; height: 17px; flex-shrink: 0; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: scan-spin .7s linear infinite; }
 @keyframes scan-spin { to { transform: rotate(360deg); } }
 .result-panel { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 640px; margin: 28px auto 0; padding: 25px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); }
+.report-results { display: grid; gap: 20px; }
 .score-block { width: min(280px, 100%); margin-inline: auto; }
 .result-copy { max-width: 480px; margin-inline: auto; }
 .score-label { color: var(--muted); font-size: 13px; }

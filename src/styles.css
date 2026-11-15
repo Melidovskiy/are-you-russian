@@ -133,7 +133,7 @@ meter::-moz-meter-bar { background: var(--accent); }
 .score-note { margin: 0; font-size: 14px; color: var(--muted); }
 .score-caption { margin: 10px 0 8px; font-size: 13px; color: var(--muted); line-height: 1.65; }
 .text-button { padding: 2px 0; border: 0; background: none; color: var(--text); font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
-.scan-progress { grid-column: 1 / -1; padding-top: 15px; font-size: 13px; color: var(--muted); }
+.scan-progress { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
 progress { display: block; width: 100%; height: 4px; margin-top: 9px; accent-color: var(--accent); }
 h2 { margin: 0; font-size: 25px; font-weight: 650; letter-spacing: -.4px; line-height: 1.4; }
 .signals-section { border-top: 1px solid var(--line); padding-top: 20px; }
@@ -259,3 +259,5 @@ summary::-webkit-details-marker { display: none; }
 .status-dot[data-status="warning"] { background: #dba727; }
 .status-dot[data-status="bad"] { background: #e05555; }
 .score-line .status-dot { align-self: center; }
+
+.result-panel[aria-busy="true"] { padding-block: 18px; }

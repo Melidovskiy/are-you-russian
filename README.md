@@ -10,15 +10,38 @@
 
 Русскоязычная адаптация [FuckClaude](https://github.com/LinXiaoTao/FuckClaude), исходная версия — [`e730162`](https://github.com/LinXiaoTao/FuckClaude/tree/e730162a5482c51317732c270e2d9f68ca79c858).
 
+## Руководства
+
+[Каталог из 17 руководств](https://are-you-russian.vercel.app/guides/) с поиском, фильтром по теме и маршрутами чтения. В каждой статье есть содержание, источники, дата редакции и связанные материалы. Примеры адаптированы для русскоязычных пользователей.
+
+| Тема | С чего начать |
+| --- | --- |
+| Аккаунт и оплата | [Первая проверка](https://are-you-russian.vercel.app/guides/antiban-essentials/), [регистрация и номер телефона](https://are-you-russian.vercel.app/guides/account-registration-and-payment-antiban/), [оплата и отказ по карте](https://are-you-russian.vercel.app/guides/payment-methods-comparison/), [личный и рабочий аккаунты](https://are-you-russian.vercel.app/guides/multi-account-management/), [Россия и поддерживаемые регионы](https://are-you-russian.vercel.app/guides/regional-access-strategy/) |
+| Региональные признаки | [Что известно о проверках Claude](https://are-you-russian.vercel.app/guides/claude-steganography-and-risk-model/), [разбор случаев блокировки](https://are-you-russian.vercel.app/guides/ban-case-studies/) |
+| Браузер и сеть | [Российское окружение](https://are-you-russian.vercel.app/guides/environment-cleanup-and-ip-setup/), [Chrome, Firefox и Edge](https://are-you-russian.vercel.app/guides/browser-configuration-guide/), [VPN и прокси](https://are-you-russian.vercel.app/guides/vpn-and-proxy-selection/), [настройки устройств](https://are-you-russian.vercel.app/guides/device-setup-guide/) |
+| Claude Code и API | [Конфигурация и ключи](https://are-you-russian.vercel.app/guides/claude-code-and-api-safety/), [токены и стоимость](https://are-you-russian.vercel.app/guides/api-advanced-optimization/), [очереди и повторы](https://are-you-russian.vercel.app/guides/automation-safety-practices/) |
+| Ошибки и восстановление | [Диагностика ошибок](https://are-you-russian.vercel.app/guides/troubleshooting-guide/), [апелляция и шаблон обращения](https://are-you-russian.vercel.app/guides/account-appeal-and-recovery-sop/) |
+| Резерв | [Альтернативные модели и локальное выполнение](https://are-you-russian.vercel.app/guides/domestic-and-open-source-alternatives/) |
+
 ## Проверки
 
-Семь браузерных сигналов российского профиля: часовой пояс (34), языки (22), шрифты приложений (12), WebRTC (10), браузер (10), региональные форматы (8), платформа и emoji (4). Каждый вклад округляется перед сложением, как в оригинале. Недоступные данные расширяют диапазон результата; отсутствие измерения не считается отсутствием признака.
+| Проверка | Вес |
+| --- | --- |
+| Часовой пояс | 34 |
+| Языки браузера | 22 |
+| Шрифты приложений | 12 |
+| WebRTC | 10 |
+| Браузер | 10 |
+| Региональные форматы | 8 |
+| Платформа и emoji | 4 |
+
+Каждый вклад округляется перед сложением, как в оригинале. Недоступные данные расширяют диапазон результата; отсутствие измерения не считается отсутствием признака.
 
 Детали включают сезонные смещения UTC, порядок языков, каждый проверенный шрифт, IPv4/IPv6 и типы ICE-кандидатов, Client Hints, региональные форматы и время измерения. WebRTC включается переключателем перед запуском. Общий отчёт можно скачать в JSON, сохранить в PNG или отправить через системное меню. Если отправка недоступна, картинка скачивается.
 
 Репутация IP рассчитывается по исходному агрегатору FuckClaude и появляется в том же отчёте. Источники — proxycheck.io, AbuseIPDB и ipwho.is. Для браузерного индекса меньший балл означает меньше российских признаков; для репутации IP больший балл означает лучшую оценку сети. Без ключей или при сбое источников репутация может быть неизвестна. В подробностях доступны состояние источников, признаки сети и вычеты. Если запрос IP завершился ошибкой, браузерные результаты сохраняются.
 
-Это авторская модель региональных признаков, а не ответ Anthropic. Сайт не читает аккаунт, установленный Claude Code или его системный промпт. Индекс не является вероятностью блокировки и не гарантирует доступ к сервису. Данные публичных новостей и рекламные блоки оригинала не перенесены; вместо них есть краткое руководство и ссылки на официальные источники.
+Это авторская модель региональных признаков, а не ответ Anthropic. Сайт не читает аккаунт, установленный Claude Code или его системный промпт. Индекс не является вероятностью блокировки и не гарантирует доступ к сервису. Руководства помогают сопоставить результаты с настройками и ошибками конкретного клиента.
 
 ## Запуск
 
@@ -82,6 +105,11 @@ location / {
 - Поддерживаются GET и OPTIONS. Запись не поддерживается. CORS разрешён для публичных результатов.
 - Лимит: 30 запросов за минуту с IP на endpoint, ответ 429 с Retry-After: 60. Кеш IP — до 8 минут, не более 400 записей. Ограничения хранятся в памяти процесса, не являются общим лимитом нескольких серверов.
 
+```sh
+curl "https://are-you-russian.vercel.app/api/check?format=json" -H "Accept-Language: ru-RU,ru"
+curl "https://are-you-russian.vercel.app/api/ip?format=json"
+```
+
 ## Расширение
 
 Готовый ZIP: `downloads/are-you-russian-extension.zip`. Распакуйте его, откройте `chrome://extensions`, включите режим разработчика и загрузите папку с manifest.json. Расширение автоматически в браузер не устанавливается.
@@ -118,3 +146,15 @@ npm --prefix extension run e2e
 ## Лицензии
 
 [MIT](LICENSE), авторы Melidovskiy и LinXiaoTao. Лицензия Roboto: `assets/Roboto-OFL.txt`.
+
+## Устройство проекта
+
+| Путь | Назначение |
+| --- | --- |
+| `src/app.js`, `src/core/` | Запуск сканирования и исходные детекторы |
+| `src/server/`, `api/` | Общая логика HTTP API и адаптеры Vercel |
+| `docs/guides/` | Русскоязычные статьи в Markdown |
+| `src/guides/catalog.js` | Темы, описания, источники и связи статей |
+| `scripts/build-guides.mjs` | Статическая сборка каталога и страниц |
+| `extension/` | Исходники расширения и его проверки |
+| `assets/social-preview.png` | Обложка для Social Preview репозитория |

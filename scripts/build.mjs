@@ -2,6 +2,7 @@ import { cp, mkdir, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { build } from 'esbuild';
+import { buildGuides } from './build-guides.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const destination = path.join(root, 'dist');
@@ -20,5 +21,15 @@ await build({
   minify: true,
   legalComments: 'none',
 });
+await build({
+  entryPoints: [path.join(root, 'src/guides.js')],
+  outfile: path.join(destination, 'guides.js'),
+  bundle: true,
+  format: 'esm',
+  target: ['es2022'],
+  minify: true,
+  legalComments: 'none',
+});
+await buildGuides(root, destination);
 await cp(path.join(root, 'downloads'), path.join(destination, 'downloads'), { recursive: true });
 console.log('Готово. Статический сайт находится в dist/.');

@@ -1,6 +1,7 @@
 import { SIGNALS, detectSignal, resultDetails, summarize } from './signals.js';
 import { reportImage, saveBlob } from './export.js';
 import { checkIp, renderIp } from './ip.js';
+import './theme.js';
 
 const element = id => document.getElementById(id);
 const views = new Map();
@@ -210,20 +211,4 @@ element('share').addEventListener('click', async () => {
   }
 });
 
-function applyTheme(value) {
-  if (value === 'system') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = value;
-  document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).backgroundColor;
-}
-
-try {
-  const saved = localStorage.getItem('theme');
-  if (['light', 'dark', 'system'].includes(saved)) element('theme').value = saved;
-} catch {}
-applyTheme(element('theme').value);
-element('theme').addEventListener('change', () => {
-  applyTheme(element('theme').value);
-  try { localStorage.setItem('theme', element('theme').value); } catch {}
-});
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme(element('theme').value));
 element('signals').replaceChildren(...SIGNALS.map(createSignal));

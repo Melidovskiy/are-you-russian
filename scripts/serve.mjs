@@ -27,8 +27,12 @@ const server = createServer(async (request, response) => {
   }
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-    const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
-    if (relative.includes('\\') || !/^(?:index\.html|app\.js|LICENSE|(?:src|assets|downloads)\/[^.][^\0]*)$/.test(relative)) {
+    if (pathname === '/guides' || /^\/guides\/[a-z0-9-]+$/.test(pathname)) {
+      response.writeHead(308, { Location: `${pathname}/${url.search}` }).end();
+      return;
+    }
+    const relative = pathname.endsWith('/') ? `${pathname.slice(1)}index.html` : pathname.slice(1);
+    if (relative.includes('\\') || !/^(?:index\.html|(?:app|guides)\.js|LICENSE|guides\/(?:[a-z0-9-]+\/)?index\.html|(?:src|assets|downloads)\/[^.][^\0]*)$/.test(relative)) {
       response.writeHead(404).end('Not found');
       return;
     }

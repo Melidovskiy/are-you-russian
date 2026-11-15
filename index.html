@@ -22,6 +22,7 @@
         <a class="wordmark" href="./">are you russian</a>
         <nav aria-label="Навигация">
           <a class="active" href="#main" aria-current="page">Проверка</a>
+          <a href="./guides/">Руководства</a>
           <a href="#method">О методике</a>
           <a href="#tools">Инструменты</a>
           <a href="https://github.com/Melidovskiy/are-you-russian" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -108,6 +109,7 @@
       </section>
       <section id="guide" class="method-section" aria-labelledby="guide-title">
         <h2 id="guide-title">Как читать результаты</h2>
+        <p>Подробные инструкции по браузеру, сети, аккаунтам и API собраны в <a href="./guides/">разделе руководств</a>.</p>
         <details class="method-details"><summary>Согласованность часового пояса и языка</summary><p>Смотрите название зоны и сезонные смещения вместе. Изменение только смещения Date без Intl оставляет противоречие. Аналогично, список navigator.languages и региональные форматы Intl — разные значения. Расширение позволяет менять их согласованно для выбранного сайта.</p></details>
         <details class="method-details"><summary>Что показывает WebRTC</summary><p>host может быть локальным адресом или mDNS-именем, srflx — адресом, полученным через STUN, relay — адресом TURN. Локальный адрес сам по себе не доказывает утечку внешнего IP. Сравните публичный srflx с выходным адресом VPN. Отсутствие кандидатов не доказывает защиту во всех приложениях.</p></details>
         <details class="method-details"><summary>Репутация IP и доступ к Claude</summary><p>Страна и ASN не определяют репутацию сами по себе. Источники могут расходиться или не иметь данных. Оценка IP использует отдельные штрафы оригинала, выбирая более строгие признаки. Ни низкий браузерный индекс, ни высокий балл репутации не являются гарантией доступа или безопасности аккаунта.</p></details>

@@ -57,6 +57,13 @@ export function renderIp(container, outcome) {
   const score = document.createElement('span');
   score.className = 'ip-score';
   score.textContent = body.purity === null ? '—' : `${body.purity} / 100`;
+  const indicator = document.createElement('span');
+  indicator.className = 'status-dot';
+  indicator.dataset.status = { high: 'good', medium: 'warning', low: 'bad' }[body.band] || 'unknown';
+  indicator.setAttribute('role', 'img');
+  indicator.setAttribute('aria-label', { high: 'Высокая репутация IP', medium: 'Средняя репутация IP', low: 'Низкая репутация IP' }[body.band] || 'Репутация IP неизвестна');
+  indicator.title = indicator.getAttribute('aria-label');
+  score.prepend(indicator);
   summary.append(score, document.createTextNode('Репутация IP · выше — лучше'));
   const overview = measurements([
     ['Выходной IP', body.ip || 'Не определён'],

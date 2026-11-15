@@ -91,9 +91,12 @@ function renderSummary(results, finished) {
   element('score').textContent = summary.minimum === summary.maximum
     ? String(summary.minimum) : `${summary.minimum}–${summary.maximum}`;
   element('score-meter').value = summary.minimum;
+  element('score-status').dataset.status = finished ? ({ low: 'good', medium: 'warning', high: 'bad' }[summary.band] || 'unknown') : 'unknown';
   const verdicts = { low: 'Низкий индекс', medium: 'Средний индекс', high: 'Высокий индекс' };
   element('verdict').textContent = 'Проверяем окружение…';
   if (finished) element('verdict').textContent = verdicts[summary.band] || 'Неполная проверка';
+  element('score-status').setAttribute('aria-label', finished ? (verdicts[summary.band] || 'Неполная проверка') : 'Проверяем окружение');
+  element('score-status').title = element('score-status').getAttribute('aria-label');
   element('score-note').textContent = `Доступно ${summary.available} из ${SIGNALS.length} проверок. Совпадений ${summary.matches}.`;
   element('progress').value = results.length;
   element('scan-state').textContent = `Обработано ${results.length} из ${SIGNALS.length}`;

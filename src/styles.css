@@ -70,7 +70,7 @@
 .result-ip h2 { font-size: 19px; text-align: center; margin: 0 0 16px; }
 .result-ip .section-description { font-size: 13px; margin-bottom: 0; }
 .ip-summary { text-align: center; margin: 0 0 14px; }
-.ip-score { color: var(--accent); font-size: 32px; font-weight: 650; margin-right: 8px; }
+.ip-score { display: inline-flex; align-items: center; gap: 10px; color: var(--accent); font-size: 32px; font-weight: 650; margin-right: 8px; }
 .ip-details { margin-top: 15px; }
 .ip-details summary { cursor: pointer; font-size: 14px; }
 .ip-details .measurements { margin-top: 12px; }
@@ -253,3 +253,9 @@ summary::-webkit-details-marker { display: none; }
   .switch-track, .switch-track::before { transition: none; }
   .scan-spinner { animation: none; }
 }
+
+.status-dot { display: inline-block; width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; background: var(--muted); vertical-align: middle; }
+.status-dot[data-status="good"] { background: #2eab68; }
+.status-dot[data-status="warning"] { background: #dba727; }
+.status-dot[data-status="bad"] { background: #e05555; }
+.score-line .status-dot { align-self: center; }

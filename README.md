@@ -1,9 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/wordmark-white.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/wordmark-black.svg">
-    <img src="assets/wordmark-black.svg" alt="are you russian" width="720">
-  </picture>
+  <img src="assets/banner.png" alt="are-you-russian — проверка браузера и репутации IP для пользователей Claude" width="100%">
 </p>
 
 Проверка настроек браузера и репутации выходного IP для пользователей Claude. Одна кнопка запускает измерения и собирает общий отчёт с подробными результатами. [Открыть сайт](https://are-you-russian.vercel.app/).

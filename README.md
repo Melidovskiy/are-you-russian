@@ -8,15 +8,27 @@
 
 ## Руководства
 
-[Каталог из 13 руководств](https://are-you-russian.vercel.app/guides/) с поиском, фильтром по теме и маршрутами чтения. В каждой статье есть содержание, источники, дата редакции и связанные материалы. Примеры адаптированы для русскоязычных пользователей.
+[Пять коротких материалов](https://are-you-russian.vercel.app/guides/) о результатах проверки, окружении Claude и сети. Статьи содержат ссылки на первоисточники и дату редакции.
 
-| Тема | С чего начать |
+| Материал | Что разобрано |
 | --- | --- |
-| Аккаунт и оплата | [Первая проверка](https://are-you-russian.vercel.app/guides/antiban-essentials/), [регистрация и номер телефона](https://are-you-russian.vercel.app/guides/account-registration-and-payment-antiban/), [оплата и отказ по карте](https://are-you-russian.vercel.app/guides/payment-methods-comparison/), [Россия и поддерживаемые регионы](https://are-you-russian.vercel.app/guides/regional-access-strategy/) |
-| Региональные признаки | [Что известно о проверках Claude](https://are-you-russian.vercel.app/guides/claude-steganography-and-risk-model/), [разбор случаев блокировки](https://are-you-russian.vercel.app/guides/ban-case-studies/) |
-| Браузер и сеть | [Российское окружение](https://are-you-russian.vercel.app/guides/environment-cleanup-and-ip-setup/), [Chrome, Firefox и Edge](https://are-you-russian.vercel.app/guides/browser-configuration-guide/), [VPN и прокси](https://are-you-russian.vercel.app/guides/vpn-and-proxy-selection/), [настройки устройств](https://are-you-russian.vercel.app/guides/device-setup-guide/) |
-| Claude Code и API | [Региональные настройки и доступ](https://are-you-russian.vercel.app/guides/claude-code-and-api-safety/) |
-| Ошибки и восстановление | [Диагностика ошибок](https://are-you-russian.vercel.app/guides/troubleshooting-guide/), [апелляция и шаблон обращения](https://are-you-russian.vercel.app/guides/account-appeal-and-recovery-sop/) |
+| [Что показывает проверка](https://are-you-russian.vercel.app/guides/antiban-essentials/) | Индекс браузера, репутация IP и пределы выводов |
+| [Браузер и региональные признаки](https://are-you-russian.vercel.app/guides/environment-cleanup-and-ip-setup/) | Часовой пояс, языки, шрифты и WebRTC |
+| [Claude Cage](https://are-you-russian.vercel.app/guides/claude-cage/) | Изолированная среда и наш опыт проверки |
+| [VPS и маршрут к Claude](https://are-you-russian.vercel.app/guides/vpn-and-proxy-selection/) | Выходной IP, DNS и необходимые домены |
+| [Как различать ошибки доступа](https://are-you-russian.vercel.app/guides/troubleshooting-guide/) | Сетевые сбои, HTTP-ошибки и ограничения запросов |
+
+## Claude Cage
+
+Для работы с Claude в отдельном окружении рекомендуем Claude Cage — открытый проект китайского сообщества. Он объединяет инструменты Claude, региональные настройки и контроль сетевого выхода. На 21 ноября 2026 года это единственное комплексное решение такого типа, которое автор этого проекта проверил в собственной конфигурации. [Репозиторий Claude Cage](https://github.com/Lee-xeo/Claude-Cage).
+
+В нашей проверке прошли 11 критических проверок Cage, включая маршрут, DNS и сетевую изоляцию. Сторонняя оценка репутации осталась неизвестной. Это результат конкретной конфигурации. Рабочий прокси нужен отдельно, а решения об ограничениях аккаунта принимает Anthropic. Возможности актуальных версий описаны у разработчиков. [Документация Cage](https://claude-cage.com/docs/).
+
+## Собственный VPS
+
+Сервер позволяет управлять выходным IP и маршрутом. Для Claude важны согласованный сетевой выход, работа DNS, поведение IPv4/IPv6 и доступ ко всем доменам используемого клиента. Например, API использует `api.anthropic.com`, а вход и OAuth затрагивают `claude.ai`, `claude.com` и `platform.claude.com`. Дополнительные адреса зависят от функций. [Сетевые требования Claude Code](https://code.claude.com/docs/en/network-config).
+
+Грамотное развёртывание VPS — сложная задача с защитой управления, сертификатами, маршрутизацией и дальнейшим обслуживанием. Объяснять её целиком здесь не имеет смысла. В руководстве описаны требования к результату, установка VPS и настройка Cage остаются за его рамками.
 
 ## Проверки
 
@@ -75,7 +87,7 @@ node --env-file=.env scripts/serve.mjs
 
 На Vercel маршруты `api/ip.js` и `api/check.js` вызывают общий обработчик через стандартные Request/Response. Адрес посетителя берётся с помощью официального `ipAddress()` из `@vercel/functions`. Параметры `HOST`, `PORT` и `TRUSTED_PROXY_IPS` на Vercel задавать не требуется.
 
-После публикации проверьте главную страницу, кнопку проверки IP, `/api/ip?format=json` и `/api/check?format=json`. IP должен соответствовать соединению посетителя. Без ключей источники репутации отмечаются как ненастроенные.
+После публикации проверьте главную страницу, запуск общей проверки, `/api/ip?format=json` и `/api/check?format=json`. IP должен соответствовать соединению посетителя. Без ключей источники репутации отмечаются как ненастроенные.
 
 Кеш и ограничение запросов хранятся в памяти отдельного экземпляра функции. На Vercel они сбрасываются при холодном старте и не суммируются между экземплярами. Лимиты внешних источников применяются отдельно.
 

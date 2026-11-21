@@ -5,11 +5,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildGuides, prepareGuide } from '../scripts/build-guides.mjs';
-import { guides, guideCategories, guideSources, readingPaths } from '../src/guides/catalog.js';
+import { guides, guideCategories, guideSources } from '../src/guides/catalog.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
-test('guide catalog has complete bodies, valid sources and reachable reading paths', async () => {
+test('guide catalog has complete bodies, valid sources and reachable related guides', async () => {
   const slugs = new Set(guides.map(guide => guide.slug));
   assert.equal(slugs.size, guides.length);
   for (const guide of guides) {
@@ -19,7 +19,9 @@ test('guide catalog has complete bodies, valid sources and reachable reading pat
     for (const slug of guide.related) assert.ok(slugs.has(slug));
     for (const source of guide.sources) assert.equal(new URL(guideSources[source].url).protocol, 'https:');
   }
-  for (const item of readingPaths) assert.ok(slugs.has(item.slug));
+  assert.equal(guides.length, 5);
+  assert.ok(slugs.has('claude-cage'));
+  assert.equal(slugs.has('account-appeal-and-recovery-sop'), false);
 });
 
 test('article preparation keeps code escaped, headings addressable and tables scrollable', () => {

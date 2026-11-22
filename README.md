@@ -13,7 +13,7 @@
 | Материал | Что разобрано |
 | --- | --- |
 | [Что показывает проверка](https://are-you-russian.vercel.app/guides/antiban-essentials/) | Индекс браузера, репутация IP и пределы выводов |
-| [Браузер и региональные признаки](https://are-you-russian.vercel.app/guides/environment-cleanup-and-ip-setup/) | Часовой пояс, языки, шрифты и WebRTC |
+| [Браузер и региональные признаки](https://are-you-russian.vercel.app/guides/environment-cleanup-and-ip-setup/) | Часовой пояс, языки, шрифты, WebRTC и браузерный антифрод |
 | [Claude Cage](https://are-you-russian.vercel.app/guides/claude-cage/) | Изолированная среда и наш опыт проверки |
 | [VPS и маршрут к Claude](https://are-you-russian.vercel.app/guides/vpn-and-proxy-selection/) | Выходной IP, DNS и необходимые домены |
 | [Как различать ошибки доступа](https://are-you-russian.vercel.app/guides/troubleshooting-guide/) | Сетевые сбои, HTTP-ошибки и ограничения запросов |

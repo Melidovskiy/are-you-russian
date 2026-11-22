@@ -34,7 +34,7 @@ test('Vercel check route preserves language scoring and text negotiation', async
   const headers = { 'x-real-ip': '127.0.0.1', 'accept-language': 'ru-RU,ru;q=0.9' };
   const response = await check.fetch(new Request('https://example.test/api/check?format=json', { headers }));
   const body = await response.json();
-  assert.equal(body.signals.find(signal => signal.id === 'language').contribution, 22);
+  assert.equal(body.signals.find(signal => signal.id === 'language').contribution, 35);
   const text = await check.fetch(new Request('https://example.test/api/check', { headers }));
   assert.ok(text.headers.get('content-type').startsWith('text/plain'));
   assert.match(await text.text(), /Индекс российских настроек/);

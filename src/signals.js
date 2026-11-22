@@ -1,47 +1,29 @@
-import { signalsFor, riskBand } from './core/signals.js';
+import { signalsFor, riskBand, detectWebrtcLeak } from './core/signals.js';
 
 const descriptions = {
   timezone: {
     label: 'Часовой пояс',
     method: 'Название системного часового пояса и смещение относительно UTC.',
-    rule: 'Пояс из российского списка даёт 34 балла. Смещения зимой и летом показаны отдельно.',
+    rule: 'Пояс из российского списка даёт 40 баллов. Смещения зимой и летом показаны отдельно.',
     suggestion: 'Проверьте часовой пояс в настройках системы. VPN обычно сохраняет системный часовой пояс.',
   },
   language: {
-    label: 'Языки браузера',
-    method: 'Основной язык и полный список языков в порядке предпочтения.',
-    rule: 'ru-RU на первом месте даёт 22 балла, ru — 18. Для остальных позиций применяется коэффициент 0,7. Вклад каждой проверки округляется до целого.',
+    label: 'Язык и форматы',
+    method: 'Языки браузера и форматы даты и числа.',
+    rule: 'ru-RU на первом месте даёт 35 баллов, ru — 28. Для остальных позиций применяется коэффициент 0,7. Форматы показаны в деталях и отдельно не оцениваются.',
     suggestion: 'Проверьте порядок языков в браузере. Язык интерфейса и список языков могут настраиваться отдельно.',
   },
   vendorFonts: {
     label: 'Шрифты приложений',
     method: 'Проверка пяти шрифтов Яндекса, Сбера и VK по ширине текста в Canvas.',
-    rule: 'Один найденный шрифт даёт 10 баллов, два — 11, три и больше — 12.',
+    rule: 'Один найденный шрифт даёт 12 баллов, два — 13, три и больше — 14.',
     suggestion: 'Найденные шрифты доступны сайтам через Canvas. Сравните результат с отдельным профилем браузера.',
-  },
-  webrtcLeak: {
-    label: 'Адреса WebRTC',
-    method: 'ICE-кандидаты, тип соединения и доступность адресов при запросе к STUN.',
-    rule: 'Исходная методика добавляет 5 баллов при получении сетевого адреса. Страна адреса здесь не определяется.',
-    suggestion: 'Сопоставьте публичный адрес WebRTC с выходным адресом VPN. Частные адреса показывают локальную сеть.',
   },
   cnBrowser: {
     label: 'Браузер',
     method: 'User-Agent, данные Client Hints и маркеры Яндекс Браузера.',
-    rule: 'YaBrowser или Yowser в строке браузера дают 10 баллов.',
+    rule: 'Маркеры YaBrowser или Yowser дают 11 баллов. Платформа показана для справки.',
     suggestion: 'Сравните результат в другом браузере. Приватное окно обычно передаёт ту же строку User-Agent.',
-  },
-  intlLocale: {
-    label: 'Региональные форматы',
-    method: 'Локаль, календарь, система цифр и примеры форматирования даты и числа.',
-    rule: 'ru-RU даёт 8 баллов, ru — 6. Формат даты и числа помогает увидеть применённую локаль.',
-    suggestion: 'Проверьте региональные форматы системы и браузера. Они могут отличаться от языка интерфейса.',
-  },
-  emoji: {
-    label: 'Платформа',
-    method: 'Система устройства и предполагаемый поставщик emoji по данным браузера.',
-    rule: 'Косвенная эвристика оригинала с весом 4 балла. Apple и Google дают 1 балл, Microsoft и Linux — 2.',
-    suggestion: '',
   },
 };
 
@@ -50,22 +32,14 @@ export const SIGNALS = signalsFor('ru').map(signal => ({ ...signal, ...descripti
 function translateRaw(raw) {
   const values = {
     'none detected': 'Совпадений нет', 'canvas unavailable': 'Canvas недоступен',
-    'no leak detected': 'Адреса не получены', unknown: 'Данные недоступны',
-    'Apple style': 'Apple', 'Microsoft style': 'Microsoft', 'Google style': 'Google',
-    'Linux / Other style': 'Linux', 'Unknown style': 'Неизвестная платформа',
+    unknown: 'Данные недоступны',
     'Yandex Browser': 'Яндекс Браузер',
   };
-  return values[raw] || raw.replace(/^candidate leak \((.*)\)$/, '$1');
+  return values[raw] || raw;
 }
 
-export async function detectSignal(signal, includeWebRTC) {
+export async function detectSignal(signal) {
   const started = performance.now();
-  if (signal.id === 'webrtcLeak' && !includeWebRTC) {
-    return { id: signal.id, points: null, score: null, value: 'Выключено', reason: 'disabled', details: {} };
-  }
-  if (signal.id === 'webrtcLeak' && !globalThis.RTCPeerConnection) {
-    return { id: signal.id, points: null, score: null, value: 'WebRTC недоступен', reason: 'unavailable', details: {} };
-  }
   try {
     const result = await signal.detect();
     if (typeof result.raw !== 'string' || ['unknown', 'canvas unavailable'].includes(result.raw)
@@ -73,16 +47,19 @@ export async function detectSignal(signal, includeWebRTC) {
       throw new Error('Unavailable');
     }
     const elapsedMs = Math.round(performance.now() - started);
-    if (signal.id === 'webrtcLeak' && result.raw === 'no leak detected') {
-      return { id: signal.id, points: null, score: null, value: translateRaw(result.raw),
-        reason: 'unavailable', details: result.details || {}, elapsedMs };
-    }
     return { id: signal.id, value: translateRaw(result.raw), score: result.score,
       points: Math.round(result.score * signal.weight), details: result.details || {}, elapsedMs };
   } catch {
     return { id: signal.id, value: 'Данные недоступны', points: null, score: null,
       reason: 'unavailable', details: {}, elapsedMs: Math.round(performance.now() - started) };
   }
+}
+
+export async function inspectWebrtc(enabled) {
+  if (!enabled) return { reason: 'disabled' };
+  if (!globalThis.RTCPeerConnection) return { reason: 'unavailable' };
+  const { details } = await detectWebrtcLeak();
+  return { reason: details?.candidates?.length ? 'measured' : 'unavailable', details };
 }
 
 export function formatOffset(minutes) {
@@ -100,29 +77,20 @@ export function resultDetails(signal, result) {
     case 'timezone':
       return [['Название', data.timezone || missing], ['Сейчас', formatOffset(data.offsetMinutes)],
         ['В январе', formatOffset(data.januaryOffset)], ['В июле', formatOffset(data.julyOffset)]];
-    case 'language':
+    case 'language': {
+      const formats = data.formats || {};
       return [['Основной язык', data.primaryLanguage || missing],
-        ...(data.languages || []).map((language, index) => [`Приоритет ${index + 1}`, language])];
+        ...(data.languages || []).map((language, index) => [`Приоритет ${index + 1}`, language]),
+        ['Локаль форматов', formats.locale || missing], ['Календарь', formats.calendar || missing],
+        ['Цифры', formats.numberingSystem || missing], ['Пример даты', formats.date || missing],
+        ['Пример числа', formats.number || missing]];
+    }
     case 'vendorFonts':
       return (data.fonts || []).map(font => [font.name, font.available ? 'Найден' : 'Не найден']);
-    case 'webrtcLeak': {
-      const scopes = { public: 'Публичный', private: 'Локальный', masked: 'Скрыт через mDNS' };
-      return [['STUN', data.stunServer || 'stun.l.google.com:19302'],
-        ...(data.candidates || []).map(candidate => [candidate.address, `${scopes[candidate.scope]} · ${candidate.type}`])];
-    }
     case 'cnBrowser':
       return [['Маркеры Яндекса', data.browser || 'Не найдены'],
         ['Client Hints', (data.brands || []).map(brand => `${brand.brand} ${brand.version}`).join(', ') || missing],
-        ['User-Agent', data.userAgent || missing]];
-    case 'intlLocale':
-      return [['Локаль', data.locale || missing], ['Календарь', data.calendar || missing],
-        ['Цифры', data.numberingSystem || missing], ['Дата 15 июня 2026', data.date || missing],
-        ['Число 12345,67', data.number || missing]];
-    case 'emoji':
-      return [['Платформа', data.platform || missing], ['Поставщик emoji', data.vendor || missing],
-        ['Точек касания', String(data.touchPoints ?? missing)],
-        ['Глубина цвета', data.colorDepth ? `${data.colorDepth} бит` : missing],
-        ['Масштаб экрана', data.pixelRatio ? `${data.pixelRatio}×` : missing]];
+        ['User-Agent', data.userAgent || missing], ['Платформа', data.platform || missing]];
     default:
       return [];
   }

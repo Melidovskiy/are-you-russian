@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SIGNALS, detectSignal, formatOffset, resultDetails, summarize } from '../src/signals.js';
+import { SIGNALS, detectSignal, inspectWebrtc, formatOffset, resultDetails, summarize } from '../src/signals.js';
 import { REGIONS, parseIceCandidate, riskBand, scoreLanguagesForRegion, scoreTimezoneForRegion, signalsFor } from '../src/core/signals.js';
 import { assertRegionProfiles } from '../src/core/regions.js';
 
-test('используется российский профиль оригинала с семью исходными весами', () => {
+test('индекс учитывает четыре региональных признака', () => {
   assertRegionProfiles();
   assert.deepEqual(Object.fromEntries(SIGNALS.map(signal => [signal.id, signal.weight])), {
-    timezone: 34, language: 22, vendorFonts: 12, webrtcLeak: 10, cnBrowser: 10, intlLocale: 8, emoji: 4,
+    timezone: 40, language: 35, vendorFonts: 14, cnBrowser: 11,
   });
   assert.equal(SIGNALS.reduce((total, signal) => total + signal.weight, 0), 100);
 });
@@ -38,35 +38,31 @@ test('сохраняются исходные пороги индекса', () =
 
 test('непроверенный сигнал расширяет диапазон', () => {
   const results = SIGNALS.map(signal => ({ id: signal.id, points: 0, score: 0 }));
-  results.find(item => item.id === 'webrtcLeak').points = null;
-  results.find(item => item.id === 'timezone').points = 34;
+  results.find(item => item.id === 'cnBrowser').points = null;
+  results.find(item => item.id === 'timezone').points = 40;
   results.find(item => item.id === 'timezone').score = 1;
-  assert.deepEqual(summarize(results), { minimum: 34, maximum: 44, band: null, available: 6, matches: 1 });
+  assert.deepEqual(summarize(results), { minimum: 40, maximum: 51, band: null, available: 3, matches: 1 });
   assert.equal(summarize([]).maximum, 100);
 });
 
 test('вклад каждой проверки округляется перед сложением, как в оригинале', () => {
-  const results = SIGNALS.map(signal => ({ id: signal.id, points: signal.id === 'language' ? 17.6 : signal.id === 'emoji' ? 1.6 : 0, score: 0 }));
+  const results = SIGNALS.map(signal => ({ id: signal.id, points: signal.id === 'language' ? 17.6 : signal.id === 'cnBrowser' ? 1.6 : 0, score: 0 }));
   assert.equal(summarize(results).minimum, 20);
   assert.equal(summarize(results).maximum, 20);
 });
 
 test('выключенный WebRTC не запускает детектор', async () => {
-  let called = false;
-  const result = await detectSignal({ id: 'webrtcLeak', weight: 10, detect() { called = true; } }, false);
-  assert.equal(called, false);
-  assert.equal(result.reason, 'disabled');
-  assert.equal(result.points, null);
+  assert.deepEqual(await inspectWebrtc(false), { reason: 'disabled' });
 });
 
 test('ошибки детектора сохраняются как недоступные данные', async () => {
-  const result = await detectSignal({ id: 'language', weight: 22, detect() { throw new Error('Blocked'); } }, false);
+  const result = await detectSignal({ id: 'language', weight: 35, detect() { throw new Error('Blocked'); } });
   assert.equal(result.points, null);
   assert.equal(result.reason, 'unavailable');
 });
 
 test('пустой результат Canvas не становится успешной проверкой', async () => {
-  const result = await detectSignal({ id: 'vendorFonts', weight: 12, detect() { return { raw: 'canvas unavailable', score: 0 }; } }, false);
+  const result = await detectSignal({ id: 'vendorFonts', weight: 14, detect() { return { raw: 'canvas unavailable', score: 0 }; } });
   assert.equal(result.points, null);
 });
 
@@ -88,27 +84,27 @@ test('локальные адреса и mDNS различаются', () => {
 
 test('отчёт сохраняет подробности и время измерения', async () => {
   const details = { languages: ['en-US', 'ru-RU'], primaryLanguage: 'en-US' };
-  const result = await detectSignal({ id: 'language', weight: 22,
-    detect: () => ({ raw: 'en-us, ru-ru', score: 0.7, details }) }, false);
+  const result = await detectSignal({ id: 'language', weight: 35,
+    detect: () => ({ raw: 'en-us, ru-ru', score: 0.7, details }) });
   assert.deepEqual(result.details, details);
-  assert.equal(result.points, 15);
+  assert.equal(result.points, 25);
   assert.ok(Number.isFinite(result.elapsedMs));
 });
 
 test('некорректная оценка сохраняет проверку как недоступную', async () => {
   for (const score of [NaN, Infinity, -1, 1.1]) {
-    const result = await detectSignal({ id: 'timezone', weight: 34, detect: () => ({ raw: 'Europe/Moscow', score }) }, false);
+    const result = await detectSignal({ id: 'timezone', weight: 40, detect: () => ({ raw: 'Europe/Moscow', score }) });
     assert.equal(result.points, null);
     assert.equal(result.reason, 'unavailable');
   }
 });
 
 test('повторные и посторонние записи не увеличивают число проверок', () => {
-  const summary = summarize([{ id: 'timezone', points: 34, score: 1 },
-    { id: 'timezone', points: 34, score: 1 }, { id: 'other', points: 100, score: 1 }]);
+  const summary = summarize([{ id: 'timezone', points: 40, score: 1 },
+    { id: 'timezone', points: 40, score: 1 }, { id: 'other', points: 100, score: 1 }]);
   assert.equal(summary.available, 1);
   assert.equal(summary.matches, 1);
-  assert.equal(summary.minimum, 34);
+  assert.equal(summary.minimum, 40);
   assert.equal(summary.maximum, 100);
 });
 
@@ -129,23 +125,10 @@ test('каждый шрифт и порядок языков попадают в
   const fonts = [{ name: 'YS Text', available: false }, { name: 'VK Sans Display', available: true }];
   assert.deepEqual(resultDetails({ id: 'vendorFonts' }, { details: { fonts } }),
     [['YS Text', 'Не найден'], ['VK Sans Display', 'Найден']]);
-  assert.deepEqual(resultDetails({ id: 'language' }, { details: { primaryLanguage: 'en-US', languages: ['en-US', 'ru-RU'] } }),
-    [['Основной язык', 'en-US'], ['Приоритет 1', 'en-US'], ['Приоритет 2', 'ru-RU']]);
-});
-
-test('неполный WebRTC сохраняет обнаруженные mDNS-кандидаты', async () => {
-  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'RTCPeerConnection');
-  Object.defineProperty(globalThis, 'RTCPeerConnection', { configurable: true, value: class {} });
-  try {
-    const details = { candidates: [{ address: 'phone.local', type: 'host', scope: 'masked' }] };
-    const result = await detectSignal({ id: 'webrtcLeak', weight: 10,
-      detect: () => ({ raw: 'no leak detected', score: 0, details }) }, true);
-    assert.equal(result.points, null);
-    assert.deepEqual(result.details, details);
-  } finally {
-    if (descriptor) Object.defineProperty(globalThis, 'RTCPeerConnection', descriptor);
-    else delete globalThis.RTCPeerConnection;
-  }
+  assert.deepEqual(resultDetails({ id: 'language' }, { details: { primaryLanguage: 'en-US', languages: ['en-US', 'ru-RU'], formats: { locale: 'ru-RU' } } }),
+    [['Основной язык', 'en-US'], ['Приоритет 1', 'en-US'], ['Приоритет 2', 'ru-RU'],
+      ['Локаль форматов', 'ru-RU'], ['Календарь', 'Недоступно'], ['Цифры', 'Недоступно'],
+      ['Пример даты', 'Недоступно'], ['Пример числа', 'Недоступно']]);
 });
 
 test('WebRTC собирает IPv4, IPv6 и mDNS, затем закрывает соединение', async () => {
@@ -166,9 +149,10 @@ test('WebRTC собирает IPv4, IPv6 и mDNS, затем закрывает 
   Object.defineProperty(globalThis, 'window', { configurable: true, value: { RTCPeerConnection: Peer } });
   Object.defineProperty(globalThis, 'RTCPeerConnection', { configurable: true, value: Peer });
   try {
-    const signal = SIGNALS.find(signal => signal.id === 'webrtcLeak');
-    const result = await detectSignal(signal, true);
-    assert.equal(result.points, 5);
+    const result = await inspectWebrtc(true);
+    assert.equal(result.reason, 'measured');
+    assert.equal('points' in result, false);
+    assert.ok(SIGNALS.every(signal => signal.id !== 'webrtcLeak'));
     assert.equal(result.details.candidates.length, 3);
     assert.deepEqual(result.details.candidates.map(candidate => candidate.scope), ['private', 'public', 'masked']);
     assert.equal(closed, 1);

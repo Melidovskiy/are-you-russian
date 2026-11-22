@@ -1,4 +1,5 @@
-import { routeComparisonLabels } from './core/webrtc-route.js';
+import { publicAddress, routeComparisonLabels } from './core/webrtc-route.js';
+import { describeIpFamily } from './ip-families.js';
 
 const networkTypes = { Residential: 'Домашняя сеть', Datacenter: 'Дата-центр', Business: 'Бизнес-сеть', Unknown: 'Неизвестно' };
 const labels = { proxy: 'Прокси', vpn: 'VPN', tor: 'Tor', datacenter: 'Дата-центр', abusive: 'Жалобы' };
@@ -48,15 +49,40 @@ function measurements(entries) {
   return list;
 }
 
-export function renderIp(container, outcome, webrtcRoute) {
+export function renderIp(container, outcome, webrtcRoute, webrtc, ipFamilies) {
   const route = document.createElement('p');
   route.className = 'ip-route-comparison';
   route.textContent = `Сравнение с WebRTC: ${routeComparisonLabels[webrtcRoute.status]}.`;
   if (['mixed', 'mismatch'].includes(webrtcRoute.status)) {
     route.textContent += ' Проверьте маршрутизацию. Разные адреса сами по себе не доказывают утечку.';
   }
+  const diagnostics = [route];
+  const candidates = webrtc.details?.candidates || [];
+  if (candidates.length) {
+    const details = document.createElement('details');
+    details.className = 'ip-details';
+    const heading = document.createElement('summary');
+    heading.textContent = 'Адреса WebRTC';
+    const scopes = { public: 'Публичный', private: 'Локальный', masked: 'Скрыт через mDNS' };
+    details.append(heading, measurements([
+      ['STUN', webrtc.details.stunServer],
+      ...candidates.map(candidate => [candidate.address, `${scopes[candidate.scope]} · ${candidate.type}`]),
+    ]));
+    diagnostics.push(details);
+  }
+  if (ipFamilies.length) {
+    const siteIp = publicAddress(outcome.result?.ip);
+    const comparison = ipFamilies.find(result => result.family === siteIp?.family && result.status === 'ok');
+    diagnostics.unshift(measurements(ipFamilies.map(result => [`Выход IPv${result.family}`, describeIpFamily(result)])));
+    const note = document.createElement('p');
+    note.className = 'ip-route-comparison';
+    note.textContent = comparison && comparison.ip !== siteIp.value
+      ? `Выход IPv${siteIp.family} к ipify отличается от адреса, который видит этот сайт. Проверьте маршрутизацию для обоих сайтов.`
+      : 'Адреса получены через ipify. Сравните их с ожидаемыми адресами VPN.';
+    diagnostics.splice(1, 0, note);
+  }
   if (outcome.status === 'error') {
-    container.replaceChildren(document.createTextNode(outcome.message), route);
+    container.replaceChildren(document.createTextNode(outcome.message), ...diagnostics);
     return;
   }
   const body = outcome.result;
@@ -88,7 +114,7 @@ export function renderIp(container, outcome, webrtcRoute) {
     ...Object.entries(body.sources).map(([key, value]) => [key, sourceStates[value.status] || value.status]),
     ...body.deductions.map(deduction => [deduction.source, `${deductions[deduction.code] || deduction.label}: ${deduction.points}`]),
   ]));
-  container.replaceChildren(summary, overview, route, details);
+  container.replaceChildren(summary, overview, ...diagnostics, details);
   if (body.notice) {
     const notice = document.createElement('p');
     notice.textContent = notices[body.notice.code] || 'Данные неполные.';

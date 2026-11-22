@@ -275,6 +275,12 @@ function normLangs() {
   const list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
   return list.map((l) => (l || "").toLowerCase());
 }
+function readFormats() {
+  const options = Intl.DateTimeFormat().resolvedOptions();
+  return { locale: options.locale, calendar: options.calendar, numberingSystem: options.numberingSystem,
+    date: new Intl.DateTimeFormat(undefined, { dateStyle: "long", timeZone: "UTC" }).format(new Date("2026-06-15T12:00:00Z")),
+    number: new Intl.NumberFormat().format(12345.67) };
+}
 function makeDetectors(regionId, profile) {
   return {
     timezone: () => {
@@ -295,21 +301,22 @@ function makeDetectors(regionId, profile) {
     },
     language: () => {
       const langs = normLangs();
+      let formats;
+      if (regionId === "ru") {
+        try { formats = readFormats(); } catch {}
+      }
       return {
         raw: langs.join(", ") || "unknown",
         score: scoreLanguagesForRegion(langs, regionId),
-        details: { languages: langs, primaryLanguage: navigator.language || "" }
+        details: { languages: langs, primaryLanguage: navigator.language || "", formats }
       };
     },
     intlLocale: () => {
       let locale = "";
       let details = {};
       try {
-        const options = Intl.DateTimeFormat().resolvedOptions();
-        locale = options.locale || "";
-        details = { locale, calendar: options.calendar, numberingSystem: options.numberingSystem,
-          date: new Intl.DateTimeFormat(undefined, { dateStyle: "long", timeZone: "UTC" }).format(new Date("2026-06-15T12:00:00Z")),
-          number: new Intl.NumberFormat().format(12345.67) };
+        details = readFormats();
+        locale = details.locale || "";
       } catch {
         locale = "";
       }
@@ -325,7 +332,8 @@ function makeDetectors(regionId, profile) {
       const brands = (uaData()?.brands ?? []).map((b) => b.brand).join(" ");
       const { name, score } = scoreBrowserPatterns(`${navigator.userAgent} ${brands}`, profile.browsers);
       return { raw: name ?? "none detected", score, details: {
-        userAgent: navigator.userAgent, brands: uaData()?.brands || [], browser: name
+        userAgent: navigator.userAgent, brands: uaData()?.brands || [], browser: name,
+        platform: uaData()?.platform || navigator.platform || ""
       } };
     },
     deviceVendor: async () => {
@@ -401,6 +409,7 @@ export {
   REGIONS,
   SIGNALS,
   activeWeightForRegion,
+  detectWebrtcLeak,
   isServerMeasurable,
   measuredWeightForRegion,
   regionForLang,

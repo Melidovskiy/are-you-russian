@@ -1,4 +1,4 @@
-function publicAddress(value) {
+export function publicAddress(value) {
   if (typeof value !== 'string') return null;
   const address = value.trim().toLowerCase().replace(/^\[(.*)\]$/, '$1');
   if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(address)) {

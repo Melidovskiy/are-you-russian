@@ -16,11 +16,19 @@ test('HTTP check leaves browser-only and missing signals unknown', () => {
   assert.equal(empty.maximum, 100);
   assert.equal(empty.normalizedScore, null);
   const russian = checkHeaders(new Headers({ 'accept-language': 'ru-RU,ru;q=0.9', 'user-agent': 'Mozilla Windows YaBrowser/26' }));
-  assert.ok(russian.minimum >= 22);
+  assert.equal(russian.minimum, 46);
+  assert.equal(russian.measuredWeight, 46);
   assert.equal(russian.signals.find(x => x.id === 'timezone').measured, false);
-  assert.equal(russian.signals.find(x => x.id === 'language').contribution, 22);
+  assert.equal(russian.signals.find(x => x.id === 'language').contribution, 35);
 });
 
+test('Accept-Language ignores excluded and wildcard languages and orders positive preferences', () => {
+  const language = value => checkHeaders(new Headers({ 'accept-language': value })).signals.find(x => x.id === 'language');
+  assert.equal(language('en-US,ru-RU;q=0').contribution, 0);
+  assert.equal(language('ru-RU;q=0.2, en-US;q=0.9, *;q=1').contribution, 25);
+  assert.equal(language('en-US;q=0.2, RU-RU;Q=0.9').contribution, 35);
+  assert.equal(language('*;q=1, ru;q=0.000, ru-RU;q=2').measured, false);
+});
 test('private addresses never trigger reputation network requests', async () => {
   const original = globalThis.fetch;
   globalThis.fetch = () => { throw new Error('unexpected network'); };

@@ -1,6 +1,6 @@
 import { isIP } from 'node:net';
 import { evaluateIp, normalizeIp, renderText, rateLimit } from './ip-purity.js';
-import { signalsFor, scoreLanguagesForRegion, scoreBrowserForRegion, scoreEmojiVendor } from '../core/signals.js';
+import { signalsFor, scoreLanguagesForRegion, scoreBrowserForRegion } from '../core/signals.js';
 export function clientIp(socketAddress, headers, trusted = process.env.TRUSTED_PROXY_IPS || '') {
     const peer = normalizeIp(socketAddress);
     if (trusted.split(',').map(x => normalizeIp(x.trim())).filter(Boolean).includes(peer)) {
@@ -10,13 +10,23 @@ export function clientIp(socketAddress, headers, trusted = process.env.TRUSTED_P
     }
     return peer && isIP(peer) ? peer : null;
 }
+function preferredLanguages(header) {
+    const accepted = [];
+    for (const entry of (header || '').split(',')) {
+        const match = /^([a-z]{1,8}(?:-[a-z0-9]{1,8})*)(?:\s*;\s*q\s*=\s*(0(?:\.\d{0,3})?|1(?:\.0{0,3})?))?$/i.exec(entry.trim());
+        if (!match) continue;
+        const quality = Number(match[2] ?? 1);
+        if (quality > 0) accepted.push({ tag: match[1].toLowerCase(), quality });
+    }
+    accepted.sort((a, b) => b.quality - a.quality);
+    return [...new Set(accepted.map(entry => entry.tag))];
+}
 export function checkHeaders(headers) {
-    const languages = (headers.get('accept-language') || '').split(',').map(x => x.split(';')[0].trim()).filter(Boolean);
+    const languages = preferredLanguages(headers.get('accept-language'));
     const ua = headers.get('user-agent') || '';
     const values = {
         language: languages.length ? { value: languages.join(', '), score: scoreLanguagesForRegion(languages, 'ru') } : null,
         cnBrowser: ua ? { value: scoreBrowserForRegion(ua, 'ru').name || ua, score: scoreBrowserForRegion(ua, 'ru').score } : null,
-        emoji: ua ? { value: scoreEmojiVendor(ua).vendor, score: scoreEmojiVendor(ua).score } : null,
     };
     const signals = signalsFor('ru').map(s => ({ id: s.id, weight: s.weight, measured: Boolean(values[s.id]), value: values[s.id]?.value ?? null, contribution: values[s.id] ? Math.round(values[s.id].score * s.weight) : null }));
     const measuredWeight = signals.filter(x => x.measured).reduce((n, x) => n + x.weight, 0);

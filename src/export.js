@@ -1,5 +1,6 @@
 import { networkTypeLabel } from './ip.js';
 import { routeComparisonLabels } from './core/webrtc-route.js';
+import { describeIpFamily } from './ip-families.js';
 
 export function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -14,7 +15,9 @@ export async function reportImage(report) {
   await document.fonts.ready;
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
-  canvas.height = 490 + report.results.length * 58 + (report.ip ? 170 : 0) + (report.webrtcRoute ? 36 : 0);
+  const ipFamilies = report.ipFamilies || [];
+  canvas.height = 490 + report.results.length * 58 + (report.ip ? 170 : 0)
+    + (report.webrtcRoute ? 36 : 0) + ipFamilies.length * 32;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#f8f9fa';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -55,6 +58,11 @@ export async function reportImage(report) {
       ctx.font = '20px Roboto, sans-serif';
       ctx.fillText(`WebRTC: ${routeComparisonLabels[report.webrtcRoute.status]}.`, 70, y + 124);
     }
+    ctx.fillStyle = '#626262';
+    ctx.font = '20px Roboto, sans-serif';
+    ipFamilies.forEach((result, i) => {
+      ctx.fillText(`IPv${result.family}: ${describeIpFamily(result)}`, 70, y + 156 + 32 * i);
+    });
   }
   ctx.fillStyle = '#626262';
   ctx.font = '20px Roboto, sans-serif';

@@ -1,7 +1,8 @@
-import { SIGNALS, detectSignal, resultDetails, summarize } from './signals.js';
+import { SIGNALS, detectSignal, inspectWebrtc, resultDetails, summarize } from './signals.js';
 import { reportImage, saveBlob } from './export.js';
 import { checkIp, renderIp } from './ip.js';
 import { compareWebrtcRoute } from './core/webrtc-route.js';
+import { measureIpFamilies } from './ip-families.js';
 import './theme.js';
 
 const element = id => document.getElementById(id);
@@ -54,11 +55,8 @@ function createSignal(signal) {
   return row;
 }
 
-function statusFor(signal, result) {
-  if (result.reason === 'disabled') return 'Выключено';
+function statusFor(result) {
   if (result.points === null) return 'Недоступно';
-  if (signal.id === 'webrtcLeak') return 'Адреса получены';
-  if (signal.id === 'emoji') return 'Косвенный признак';
   if (result.score >= 0.6) return 'Совпадение';
   if (result.score >= 0.25) return 'Частичное совпадение';
   return 'Без совпадений';
@@ -66,7 +64,7 @@ function statusFor(signal, result) {
 
 function updateSignal(signal, result) {
   const view = views.get(signal.id);
-  view.status.textContent = statusFor(signal, result);
+  view.status.textContent = statusFor(result);
   view.status.dataset.kind = result.score >= 0.25 ? 'match' : 'info';
   view.value.textContent = result.value;
   view.points.textContent = result.points === null ? '—' : `+${Number(result.points.toFixed(2)).toLocaleString('ru-RU')}`;
@@ -77,13 +75,9 @@ function updateSignal(signal, result) {
     return row;
   });
   view.measurements.replaceChildren(...rows);
-  view.measurements.hidden = rows.length === 0 || result.reason === 'disabled';
+  view.measurements.hidden = rows.length === 0;
   view.notice.hidden = result.points !== null;
   view.notice.textContent = 'Браузер не вернул данные. Вес этой проверки включён в верхнюю границу индекса.';
-  if (result.reason === 'disabled') view.notice.textContent = 'WebRTC выключен. В верхней границе учтены 10 непроверенных баллов.';
-  if (signal.id === 'webrtcLeak' && result.reason === 'unavailable') {
-    view.notice.textContent = 'За время проверки сетевые адреса не получены. Это может быть связано с настройками WebRTC, сетью или фильтрацией STUN.';
-  }
   view.suggestion.hidden = !signal.suggestion || result.points === null || result.score < 0.25;
 }
 
@@ -114,6 +108,7 @@ element('scan').addEventListener('click', async () => {
   element('scan-spinner').hidden = false;
   element('result').setAttribute('aria-busy', 'true');
   element('include-webrtc').disabled = true;
+  element('include-ip-families').disabled = true;
   element('download').disabled = true;
   element('image').disabled = true;
   element('share').disabled = true;
@@ -123,6 +118,8 @@ element('scan').addEventListener('click', async () => {
   element('ip-result').textContent = 'Проверяем IP и запрашиваем источники репутации…';
   const ipCheck = checkIp();
   const includeWebRTC = element('include-webrtc').checked;
+  const webrtcCheck = inspectWebrtc(includeWebRTC);
+  const ipFamiliesCheck = measureIpFamilies(element('include-ip-families').checked);
   const results = [];
   for (const view of views.values()) {
     view.status.textContent = 'Проверяем…';
@@ -137,25 +134,25 @@ element('scan').addEventListener('click', async () => {
   try {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     await Promise.all(SIGNALS.map(async signal => {
-      const result = await detectSignal(signal, includeWebRTC);
+      const result = await detectSignal(signal);
       results.push(result);
       element('progress').value = results.length;
       element('scan-state').textContent = `Обработано ${results.length} из ${SIGNALS.length}`;
     }));
     element('scan-state').textContent = 'Собираем результаты…';
     element('progress').removeAttribute('value');
-    const [ip] = await Promise.all([ipCheck, minimumDuration]);
+    const [ip, webrtc, ipFamilies] = await Promise.all([ipCheck, webrtcCheck, ipFamiliesCheck, minimumDuration]);
     for (const signal of SIGNALS) {
       updateSignal(signal, results.find(result => result.id === signal.id));
     }
-    const webrtcRoute = compareWebrtcRoute(ip.result?.ip, results.find(result => result.id === 'webrtcLeak'));
-    renderIp(element('ip-result'), ip, webrtcRoute);
+    const webrtcRoute = compareWebrtcRoute(ip.result?.ip, webrtc);
+    renderIp(element('ip-result'), ip, webrtcRoute, webrtc, ipFamilies);
     const summary = renderSummary(results, true);
     report = {
-      version: 4, checkedAt: new Date().toISOString(),
-      methodology: 'FuckClaude, Russian profile',
+      version: 5, checkedAt: new Date().toISOString(),
+      methodology: 'are-you-russian, adapted FuckClaude Russian profile',
       source: 'https://github.com/LinXiaoTao/FuckClaude/tree/e730162a5482c51317732c270e2d9f68ca79c858',
-      includesWebRTC: includeWebRTC, summary, ip, webrtcRoute,
+      includesWebRTC: includeWebRTC, summary, ip, webrtcRoute, webrtc, ipFamilies,
       results: SIGNALS.map(signal => ({ ...results.find(result => result.id === signal.id), label: signal.label, weight: signal.weight })),
     };
     const ipMessage = ip.status === 'ok' ? 'Результат проверки IP получен.' : 'Проверка IP недоступна.';
@@ -176,6 +173,7 @@ element('scan').addEventListener('click', async () => {
     element('scan-spinner').hidden = true;
     element('result').setAttribute('aria-busy', 'false');
     element('include-webrtc').disabled = false;
+    element('include-ip-families').disabled = false;
   }
 });
 
@@ -216,4 +214,5 @@ element('share').addEventListener('click', async () => {
   }
 });
 
+element('progress').max = SIGNALS.length;
 element('signals').replaceChildren(...SIGNALS.map(createSignal));

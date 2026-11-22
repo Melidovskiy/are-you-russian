@@ -6,7 +6,7 @@
     <meta name="description" content="Проверка окружения и репутации IP для пользователей Claude. Подробные измерения браузера и короткие руководства по сети и Claude Cage.">
     <meta name="theme-color" content="#f8f7f5">
     <meta name="referrer" content="no-referrer">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.ipify.org https://api6.ipify.org; object-src 'none'; base-uri 'self'; form-action 'none'">
     <meta property="og:title" content="Are you Russian — проверка окружения для Claude">
     <meta property="og:description" content="Настройки браузера, репутация IP и руководства по окружению Claude.">
     <meta property="og:type" content="website">
@@ -53,6 +53,14 @@
             <span>Включить проверку WebRTC</span>
           </label>
           <p id="webrtc-note" class="local-note">Для оценки IP используются внешние источники репутации. WebRTC дополнительно обращается к STUN-серверу Google.</p>
+          <label class="webrtc-option">
+            <span class="switch">
+              <input id="include-ip-families" type="checkbox" role="switch" aria-describedby="ip-families-note">
+              <span class="switch-track" aria-hidden="true"></span>
+            </span>
+            <span>Проверить IPv4 и IPv6 отдельно</span>
+          </label>
+          <p id="ip-families-note" class="local-note">Два запроса из браузера к ipify. Сервис увидит выходные IP этих запросов.</p>
         </div>
         <div id="result" class="result-panel" hidden>
           <div id="report-results" class="report-results" hidden>
@@ -66,7 +74,7 @@
               <div class="result-copy">
                 <p id="verdict" class="verdict">Проверяем окружение</p>
                 <p id="score-note" class="score-note"></p>
-                <p class="score-caption">Индекс рассчитан по методике FuckClaude. Внутренняя оценка аккаунта Anthropic странице недоступна.</p>
+                <p class="score-caption">Индекс основан на адаптации профиля FuckClaude. Внутренняя оценка аккаунта Anthropic странице недоступна.</p>
               </div>
             </div>
             <section id="ip" class="result-ip" aria-labelledby="ip-title">
@@ -81,7 +89,7 @@
           </div>
           <div id="scan-progress" class="scan-progress">
             <label id="scan-state" for="progress">Проверяем окружение</label>
-            <progress id="progress" max="7" value="0"></progress>
+            <progress id="progress" value="0"></progress>
           </div>
         </div>
         <p id="scan-message" class="visually-hidden" role="status" aria-live="polite"></p>
@@ -109,7 +117,7 @@
       <div class="reference-grid">
         <section id="method" class="method-section" aria-labelledby="method-title">
           <h2 id="method-title">О методике</h2>
-          <p>Семь проверок дают до 100 баллов. Индекс описывает совпадения с российским профилем FuckClaude. Репутация IP оценивается отдельно.</p>
+          <p>Четыре проверки дают до 100 баллов. Индекс описывает совпадения с российским профилем. WebRTC, IPv4, IPv6 и репутация IP показаны отдельно.</p>
           <details class="method-details">
             <summary>Как читать баллы</summary>
             <p>До 30 баллов — низкий индекс, от 31 до 60 — средний, от 61 — высокий. Меньшее значение означает меньше совпадений. Недоступные измерения расширяют диапазон результата.</p>
@@ -117,13 +125,13 @@
           </details>
           <details class="method-details">
             <summary>Что известно о проверках Claude</summary>
-            <p>Веса и пороги выбраны авторами FuckClaude. Внутренняя система оценки Anthropic не опубликована. Страница не читает аккаунт или установленный Claude Code. По индексу нельзя рассчитать вероятность ограничения аккаунта.</p>
+            <p>Мы адаптировали веса российского профиля FuckClaude и сохранили его пороги. Внутренняя система оценки Anthropic не опубликована. Страница не читает аккаунт или установленный Claude Code. По индексу нельзя рассчитать вероятность ограничения аккаунта.</p>
             <p><a href="https://github.com/LinXiaoTao/FuckClaude" target="_blank" rel="noopener noreferrer">Исходный проект и методика</a></p>
           </details>
           <details class="method-details">
             <summary>Какие данные передаются</summary>
-            <p>По нажатию кнопки проверки сервер передаёт выходной IP в proxycheck.io и AbuseIPDB, если настроены ключи, и в ipwho.is для геоданных. Включённый WebRTC обращается к STUN-серверу Google. Остальные измерения выполняются в браузере.</p>
-            <p>JSON и PNG создаются на устройстве. JSON содержит IP и может включать адреса WebRTC. Сервер хранит результаты IP в памяти до 8 минут и счётчики запросов. Хостинг может вести журналы доступа. Сайт запоминает только выбранную тему.</p>
+            <p>По нажатию кнопки проверки сервер передаёт выходной IP в proxycheck.io и AbuseIPDB, если настроены ключи, и в ipwho.is для геоданных. По выбору пользователя браузер обращается к STUN-серверу Google для WebRTC и к ipify для раздельной проверки IPv4 и IPv6.</p>
+            <p>JSON и PNG создаются на устройстве. В отчёт могут попасть IP-адреса. Сервер хранит результаты репутации IP в памяти до 8 минут и счётчики запросов. Хостинг может вести журналы доступа. Сайт запоминает только выбранную тему.</p>
           </details>
         </section>
         <section id="tools" class="method-section" aria-labelledby="tools-title">

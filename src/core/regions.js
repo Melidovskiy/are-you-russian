@@ -19,16 +19,16 @@ const WEIGHTS_CN = {
   emoji: 3
 };
 const WEIGHTS_RU = {
-  timezone: 34,
-  language: 22,
+  timezone: 40,
+  language: 35,
   fonts: 0,
-  vendorFonts: 12,
-  webrtcLeak: 10,
-  cnBrowser: 10,
+  vendorFonts: 14,
+  webrtcLeak: 0,
+  cnBrowser: 11,
   deviceVendor: 0,
-  intlLocale: 8,
+  intlLocale: 0,
   timezoneOffset: 0,
-  emoji: 4
+  emoji: 0
 };
 const WEIGHTS_IR = {
   timezone: 34,

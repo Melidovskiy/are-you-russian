@@ -221,14 +221,70 @@ h3 {
   color: var(--text);
 }
 #theme {
-  max-width: 105px;
+  width: 104px;
   min-height: 44px;
-  padding: 5px 9px;
+  padding: 5px 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--background);
+  border-radius: 10px;
+  background: var(--surface);
   color: var(--text);
   font-size: 13px;
+  font-weight: 500;
+}
+#theme:hover,
+#theme:open {
+  border-color: var(--muted);
+}
+#theme:focus-visible {
+  outline-offset: 2px;
+}
+@supports (appearance: base-select) {
+  #theme,
+  #theme::picker(select) {
+    appearance: base-select;
+  }
+  #theme {
+    justify-content: space-between;
+    gap: 6px;
+  }
+  #theme::picker-icon {
+    color: var(--muted);
+    font-size: 11px;
+  }
+  #theme:open::picker-icon {
+    rotate: 180deg;
+  }
+  #theme::picker(select) {
+    min-width: 132px;
+    margin-block: 6px;
+    position-area: block-end span-inline-start;
+    justify-self: end;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px #0002;
+    color: var(--text);
+  }
+  #theme option {
+    min-height: 38px;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 6px 9px;
+    border-radius: 7px;
+  }
+  #theme option:checked {
+    background: var(--accent-surface);
+    color: var(--accent-ink);
+  }
+  #theme option:is(:hover, :focus-visible) {
+    background: var(--control);
+    outline-offset: -2px;
+  }
+  #theme option::checkmark {
+    order: 1;
+    color: var(--accent-ink);
+  }
 }
 .intro {
   padding: 64px 0 60px;

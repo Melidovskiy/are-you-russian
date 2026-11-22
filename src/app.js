@@ -1,6 +1,7 @@
 import { SIGNALS, detectSignal, resultDetails, summarize } from './signals.js';
 import { reportImage, saveBlob } from './export.js';
 import { checkIp, renderIp } from './ip.js';
+import { compareWebrtcRoute } from './core/webrtc-route.js';
 import './theme.js';
 
 const element = id => document.getElementById(id);
@@ -147,13 +148,14 @@ element('scan').addEventListener('click', async () => {
     for (const signal of SIGNALS) {
       updateSignal(signal, results.find(result => result.id === signal.id));
     }
-    renderIp(element('ip-result'), ip);
+    const webrtcRoute = compareWebrtcRoute(ip.result?.ip, results.find(result => result.id === 'webrtcLeak'));
+    renderIp(element('ip-result'), ip, webrtcRoute);
     const summary = renderSummary(results, true);
     report = {
-      version: 3, checkedAt: new Date().toISOString(),
+      version: 4, checkedAt: new Date().toISOString(),
       methodology: 'FuckClaude, Russian profile',
       source: 'https://github.com/LinXiaoTao/FuckClaude/tree/e730162a5482c51317732c270e2d9f68ca79c858',
-      includesWebRTC: includeWebRTC, summary, ip,
+      includesWebRTC: includeWebRTC, summary, ip, webrtcRoute,
       results: SIGNALS.map(signal => ({ ...results.find(result => result.id === signal.id), label: signal.label, weight: signal.weight })),
     };
     const ipMessage = ip.status === 'ok' ? 'Результат проверки IP получен.' : 'Проверка IP недоступна.';

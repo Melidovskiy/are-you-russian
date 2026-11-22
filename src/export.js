@@ -1,4 +1,5 @@
 import { networkTypeLabel } from './ip.js';
+import { routeComparisonLabels } from './core/webrtc-route.js';
 
 export function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -13,7 +14,7 @@ export async function reportImage(report) {
   await document.fonts.ready;
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
-  canvas.height = 490 + report.results.length * 58 + (report.ip ? 170 : 0);
+  canvas.height = 490 + report.results.length * 58 + (report.ip ? 170 : 0) + (report.webrtcRoute ? 36 : 0);
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#f8f9fa';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -48,6 +49,11 @@ export async function reportImage(report) {
       ctx.fillText(`${networkTypeLabel(body.network.type)}. Репутация IP: выше — лучше.`, 70, y + 88);
     } else {
       ctx.fillText('Проверка IP недоступна', 70, y + 50);
+    }
+    if (report.webrtcRoute) {
+      ctx.fillStyle = '#626262';
+      ctx.font = '20px Roboto, sans-serif';
+      ctx.fillText(`WebRTC: ${routeComparisonLabels[report.webrtcRoute.status]}.`, 70, y + 124);
     }
   }
   ctx.fillStyle = '#626262';

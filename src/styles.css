@@ -385,7 +385,7 @@ h3 {
 }
 .report-overview {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 240px minmax(0, 1fr);
   gap: 28px;
   align-items: center;
 }
@@ -419,6 +419,7 @@ h3 {
 .score-unit {
   color: var(--muted);
   font-size: 16px;
+  white-space: nowrap;
 }
 .status-dot {
   display: inline-block;
@@ -502,6 +503,7 @@ meter::-moz-meter-bar {
   font-size: 27px;
   font-weight: 550;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .ip-details {
   margin-top: 16px;
@@ -513,7 +515,8 @@ meter::-moz-meter-bar {
 .ip-details .measurements {
   margin-top: 14px;
 }
-#ip-result > p:last-child:not(.ip-summary) {
+#ip-result > p:last-child:not(.ip-summary),
+.ip-route-comparison {
   margin: 12px 0 0;
   color: var(--muted);
   font-size: 13px;
@@ -1098,7 +1101,7 @@ summary::-webkit-details-marker {
     border-radius: 16px;
   }
   .report-overview {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 22px;
   }
   .score-block {

@@ -1,3 +1,5 @@
+import { routeComparisonLabels } from './core/webrtc-route.js';
+
 const networkTypes = { Residential: 'Домашняя сеть', Datacenter: 'Дата-центр', Business: 'Бизнес-сеть', Unknown: 'Неизвестно' };
 const labels = { proxy: 'Прокси', vpn: 'VPN', tor: 'Tor', datacenter: 'Дата-центр', abusive: 'Жалобы' };
 const deductions = { datacenter: 'Адрес дата-центра', business: 'Бизнес-сеть', tor: 'Выход Tor', proxy_vpn: 'Прокси и VPN', proxy: 'Прокси', vpn: 'VPN', abuse: 'Оценка жалоб AbuseIPDB', abuser: 'Адрес отмечен за нарушения', proxycheck_risk: 'Оценка риска proxycheck', conflict: 'Источники расходятся: выбран более строгий вариант' };
@@ -46,9 +48,15 @@ function measurements(entries) {
   return list;
 }
 
-export function renderIp(container, outcome) {
+export function renderIp(container, outcome, webrtcRoute) {
+  const route = document.createElement('p');
+  route.className = 'ip-route-comparison';
+  route.textContent = `Сравнение с WebRTC: ${routeComparisonLabels[webrtcRoute.status]}.`;
+  if (['mixed', 'mismatch'].includes(webrtcRoute.status)) {
+    route.textContent += ' Проверьте маршрутизацию. Разные адреса сами по себе не доказывают утечку.';
+  }
   if (outcome.status === 'error') {
-    container.textContent = outcome.message;
+    container.replaceChildren(document.createTextNode(outcome.message), route);
     return;
   }
   const body = outcome.result;
@@ -67,7 +75,7 @@ export function renderIp(container, outcome) {
   summary.append(score, document.createTextNode('Репутация IP · выше — лучше'));
   const overview = measurements([
     ['Выходной IP', body.ip || 'Не определён'],
-    ['Страна / город', [body.geo.country, body.geo.city].filter(Boolean).join(' / ') || 'Неизвестно'],
+    ['Геолокация IP', [body.geo.country, body.geo.city].filter(Boolean).join(' / ') || 'Неизвестно'],
     ['Сеть', `${body.network.asn || ''} ${body.network.org || body.network.isp || ''}`.trim() || 'Неизвестно'],
     ['Тип сети', networkTypeLabel(body.network.type)],
   ]);
@@ -80,7 +88,7 @@ export function renderIp(container, outcome) {
     ...Object.entries(body.sources).map(([key, value]) => [key, sourceStates[value.status] || value.status]),
     ...body.deductions.map(deduction => [deduction.source, `${deductions[deduction.code] || deduction.label}: ${deduction.points}`]),
   ]));
-  container.replaceChildren(summary, overview, details);
+  container.replaceChildren(summary, overview, route, details);
   if (body.notice) {
     const notice = document.createElement('p');
     notice.textContent = notices[body.notice.code] || 'Данные неполные.';

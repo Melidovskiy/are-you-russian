@@ -244,15 +244,24 @@ h3 {
     appearance: base-select;
   }
   #theme {
+    align-items: center;
     justify-content: space-between;
     gap: 6px;
+    line-height: 1.2;
   }
   #theme::picker-icon {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin: -3px 2px 0 0;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
     color: var(--muted);
-    font-size: 11px;
+    rotate: 45deg;
   }
   #theme:open::picker-icon {
-    rotate: 180deg;
+    margin-top: 3px;
+    rotate: 225deg;
   }
   #theme::picker(select) {
     min-width: 132px;
@@ -274,8 +283,7 @@ h3 {
     border-radius: 7px;
   }
   #theme option:checked {
-    background: var(--accent-surface);
-    color: var(--accent-ink);
+    background: color-mix(in srgb, var(--button) 14%, var(--surface));
   }
   #theme option:is(:hover, :focus-visible) {
     background: var(--control);
@@ -283,7 +291,7 @@ h3 {
   }
   #theme option::checkmark {
     order: 1;
-    color: var(--accent-ink);
+    color: var(--button);
   }
 }
 .intro {
@@ -788,6 +796,16 @@ summary::-webkit-details-marker {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.8;
+}
+@media (min-width: 681px) {
+  .reference-grid {
+    row-gap: 0;
+  }
+  .method-section {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 3;
+  }
 }
 .method-details {
   padding: 17px 0;

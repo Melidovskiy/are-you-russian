@@ -118,37 +118,41 @@
         <section id="method" class="method-section" aria-labelledby="method-title">
           <h2 id="method-title">О методике</h2>
           <p>Четыре проверки дают до 100 баллов. Индекс описывает совпадения с российским профилем. WebRTC, IPv4, IPv6 и репутация IP показаны отдельно.</p>
-          <details class="method-details">
-            <summary>Как читать баллы</summary>
-            <p>До 30 баллов — низкий индекс, от 31 до 60 — средний, от 61 — высокий. Меньшее значение означает меньше совпадений. Недоступные измерения расширяют диапазон результата.</p>
-            <p>Для репутации IP более высокий балл означает лучшую оценку по доступным источникам. Состояние каждого источника указано в отчёте.</p>
-          </details>
-          <details class="method-details">
-            <summary>Что известно о проверках Claude</summary>
-            <p>Мы адаптировали веса российского профиля FuckClaude и сохранили его пороги. Внутренняя система оценки Anthropic не опубликована. Страница не читает аккаунт или установленный Claude Code. По индексу нельзя рассчитать вероятность ограничения аккаунта.</p>
-            <p><a href="https://github.com/LinXiaoTao/FuckClaude" target="_blank" rel="noopener noreferrer">Исходный проект и методика</a></p>
-          </details>
-          <details class="method-details">
-            <summary>Какие данные передаются</summary>
-            <p>По нажатию кнопки проверки сервер передаёт выходной IP в proxycheck.io и AbuseIPDB, если настроены ключи, и в ipwho.is для геоданных. По выбору пользователя браузер обращается к STUN-серверу Google для WebRTC и к ipify для раздельной проверки IPv4 и IPv6.</p>
-            <p>JSON и PNG создаются на устройстве. В отчёт могут попасть IP-адреса. Сервер хранит результаты репутации IP в памяти до 8 минут и счётчики запросов. Хостинг может вести журналы доступа. Сайт запоминает только выбранную тему.</p>
-          </details>
+          <div class="method-items">
+            <details class="method-details">
+              <summary>Как читать баллы</summary>
+              <p>До 30 баллов — низкий индекс, от 31 до 60 — средний, от 61 — высокий. Меньшее значение означает меньше совпадений. Недоступные измерения расширяют диапазон результата.</p>
+              <p>Для репутации IP более высокий балл означает лучшую оценку по доступным источникам. Состояние каждого источника указано в отчёте.</p>
+            </details>
+            <details class="method-details">
+              <summary>Что известно о проверках Claude</summary>
+              <p>Мы адаптировали веса российского профиля FuckClaude и сохранили его пороги. Внутренняя система оценки Anthropic не опубликована. Страница не читает аккаунт или установленный Claude Code. По индексу нельзя рассчитать вероятность ограничения аккаунта.</p>
+              <p><a href="https://github.com/LinXiaoTao/FuckClaude" target="_blank" rel="noopener noreferrer">Исходный проект и методика</a></p>
+            </details>
+            <details class="method-details">
+              <summary>Какие данные передаются</summary>
+              <p>По нажатию кнопки проверки сервер передаёт выходной IP в proxycheck.io и AbuseIPDB, если настроены ключи, и в ipwho.is для геоданных. По выбору пользователя браузер обращается к STUN-серверу Google для WebRTC и к ipify для раздельной проверки IPv4 и IPv6.</p>
+              <p>JSON и PNG создаются на устройстве. В отчёт могут попасть IP-адреса. Сервер хранит результаты репутации IP в памяти до 8 минут и счётчики запросов. Хостинг может вести журналы доступа. Сайт запоминает только выбранную тему.</p>
+            </details>
+          </div>
         </section>
         <section id="tools" class="method-section" aria-labelledby="tools-title">
           <h2 id="tools-title">Инструменты проекта</h2>
           <p>Расширение для отдельных настроек браузера и HTTP API для проверки доступных серверу признаков.</p>
-          <details class="method-details">
-            <summary>Расширение для Chromium</summary>
-            <p>Расширение позволяет менять часовой пояс, язык, форматы и доступность отдельных шрифтов для выбранных сайтов. Системные приложения и выходной IP имеют собственные настройки.</p>
-            <p>Распакуйте ZIP, откройте chrome://extensions, включите режим разработчика и загрузите папку с manifest.json. Все изменения изначально выключены. Доступ к сайту и глобальная политика WebRTC запрашиваются отдельно.</p>
-            <p><a href="./downloads/are-you-russian-extension.zip" download>Скачать расширение</a></p>
-          </details>
-          <details class="method-details">
-            <summary>HTTP API</summary>
-            <p><code>GET /api/check?format=json</code> возвращает доступные серверу признаки по Accept-Language и User-Agent.</p>
-            <p><code>GET /api/ip?format=json</code> возвращает IP отправителя, геоданные, репутацию и состояние источников. Параметр ip игнорируется. Ограничение — 30 запросов в минуту на IP для каждого маршрута.</p>
-            <p><a href="https://github.com/Melidovskiy/are-you-russian#http-api" target="_blank" rel="noopener noreferrer">Описание API в README</a></p>
-          </details>
+          <div class="method-items">
+            <details class="method-details">
+              <summary>Расширение для Chromium</summary>
+              <p>Расширение позволяет менять часовой пояс, язык, форматы и доступность отдельных шрифтов для выбранных сайтов. Системные приложения и выходной IP имеют собственные настройки.</p>
+              <p>Распакуйте ZIP, откройте chrome://extensions, включите режим разработчика и загрузите папку с manifest.json. Все изменения изначально выключены. Доступ к сайту и глобальная политика WebRTC запрашиваются отдельно.</p>
+              <p><a href="./downloads/are-you-russian-extension.zip" download>Скачать расширение</a></p>
+            </details>
+            <details class="method-details">
+              <summary>HTTP API</summary>
+              <p><code>GET /api/check?format=json</code> возвращает доступные серверу признаки по Accept-Language и User-Agent.</p>
+              <p><code>GET /api/ip?format=json</code> возвращает IP отправителя, геоданные, репутацию и состояние источников. Параметр ip игнорируется. Ограничение — 30 запросов в минуту на IP для каждого маршрута.</p>
+              <p><a href="https://github.com/Melidovskiy/are-you-russian#http-api" target="_blank" rel="noopener noreferrer">Описание API в README</a></p>
+            </details>
+          </div>
         </section>
       </div>
     </main>

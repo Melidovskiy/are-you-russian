@@ -1,7 +1,6 @@
 import './theme.js';
 import {
   READING_DEFS,
-  RULE_COMPARES,
   evaluateRules,
   formatUtcOffset,
 } from './core/whoami.js';
@@ -18,7 +17,7 @@ const RULE_META = {
     description: 'Проверяет, есть ли основной язык страны IP в списке языков браузера.',
   },
   'lang-header-script': {
-    title: 'Заголовок Accept-Language и navigator.languages',
+    title: 'Accept-Language и navigator.languages',
     description: 'Сверяет первый язык HTTP-заголовка с основным языком в JavaScript.',
   },
   'ua-platform': {
@@ -197,14 +196,20 @@ function renderSummary(findings) {
   const mismatches = findings.filter(f => f.verdict === 'mismatch').length;
   const unknown = findings.filter(f => f.verdict === 'unknown').length;
   const count = Object.keys(snapshot).length;
+  const total = Object.keys(READING_DEFS).length;
   el('whoami-matches').textContent = String(matches);
   el('whoami-mismatches').textContent = String(mismatches);
   el('whoami-unknown').textContent = String(unknown);
-  el('whoami-readings-count').textContent = `${count} из ${Object.keys(READING_DEFS).length}`;
+  el('whoami-readings-count').replaceChildren(
+    document.createTextNode(String(count)),
+    node('span', ` / ${total}`, 'whoami-stat-unit'),
+  );
   const place = [snapshot['request.city']?.value, snapshot['request.country']?.value].filter(Boolean).join(', ');
-  el('whoami-place').textContent = place
-    ? `Выходной IP определяется как ${place}.`
-    : 'Сверяем доступные показания браузера и сети.';
+  if (place) {
+    el('whoami-place').textContent = `Выходной IP определяется как ${place}. Показания HTTP-запроса, сети и браузера сверены по 8 правилам.`;
+  } else {
+    el('whoami-place').textContent = 'Показания HTTP-запроса, сети и браузера сверены по 8 правилам согласованности.';
+  }
 }
 
 function renderFindings(findings) {
@@ -216,7 +221,7 @@ function renderFindings(findings) {
     card.dataset.verdict = finding.verdict;
 
     const head = node('div', '', 'whoami-card-head');
-    const titleWrap = node('div');
+    const titleWrap = node('div', '', 'whoami-card-title');
     titleWrap.append(node('h3', meta.title), node('p', meta.description, 'whoami-card-desc'));
     const badge = node('span', '', 'whoami-badge');
     badge.dataset.verdict = finding.verdict;
@@ -228,7 +233,7 @@ function renderFindings(findings) {
     card.append(head);
 
     if (finding.evidence.length) {
-      const pairs = node('div', '', RULE_COMPARES[finding.ruleId] ? 'whoami-pairs is-compared' : 'whoami-pairs');
+      const pairs = node('div', '', 'whoami-pairs');
       for (const readingId of finding.evidence) {
         const def = READING_DEFS[readingId];
         const reading = snapshot[readingId];
@@ -280,8 +285,7 @@ function renderLayers() {
       const item = node('div', '', 'measurement');
       const dt = node('dt', def.label);
       const dd = document.createElement('dd');
-      const val = node('bdi', reading ? reading.value : 'Недоступно');
-      dd.append(val);
+      dd.append(node('bdi', reading ? reading.value : 'Недоступно'));
       if (reading) {
         dd.append(node('span', ` · ${reading.atMs} мс`, 'whoami-timing'));
       }
@@ -300,6 +304,9 @@ function renderAll() {
   renderSummary(findings);
   renderFindings(findings);
   renderLayers();
+  el('whoami-loading').hidden = true;
+  el('whoami-content').hidden = false;
+  el('whoami-export').disabled = false;
 }
 
 el('whoami-webrtc').addEventListener('click', async () => {
@@ -343,5 +350,4 @@ el('whoami-export').addEventListener('click', () => {
 });
 
 collectScriptReadings();
-renderAll();
 Promise.all([collectServerReadings(), collectNetworkReadings()]).then(renderAll);

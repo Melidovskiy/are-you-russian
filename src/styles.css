@@ -1874,28 +1874,33 @@ summary::-webkit-details-marker {
   }
 }
 
-@media (max-width: 720px) {
-  .shell {
-    width: calc(100% - 36px);
-  }
+@media (max-width: 840px) {
   .header-inner {
     flex-wrap: wrap;
     gap: 10px 14px;
     padding-block: 14px 12px;
     min-height: auto;
   }
-  .wordmark {
-    font-size: 20px;
-  }
   .site-nav {
     order: 3;
     width: 100%;
-    justify-content: space-between;
-    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
     font-size: 13px;
   }
   .site-nav a {
-    padding: 6px 10px;
+    height: 32px;
+    padding: 0 11px;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: calc(100% - 36px);
+  }
+  .wordmark {
+    font-size: 20px;
   }
   .intro {
     padding: 36px 0 42px;
@@ -2032,6 +2037,22 @@ summary::-webkit-details-marker {
   margin-top: 24px;
 }
 
+.whoami-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.whoami-content {
+  animation: panel-reveal 0.24s ease-out;
+}
+
 .whoami-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2058,10 +2079,17 @@ summary::-webkit-details-marker {
   display: block;
   margin-top: 6px;
   font-family: "Anthropic Serif", "Anthropic Serif Web", "Source Serif 4", Georgia, serif;
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 500;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
+}
+
+.whoami-stat-unit {
+  font-family: "Anthropic Sans", "Anthropic Sans Web", Roboto, sans-serif;
+  font-size: 15px;
+  font-weight: 450;
+  color: var(--subtle);
 }
 
 .whoami-stat-value[data-verdict="match"] {
@@ -2087,11 +2115,14 @@ summary::-webkit-details-marker {
 }
 
 .whoami-card {
+  display: flex;
+  flex-direction: column;
   padding: 20px 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--surface);
   box-shadow: var(--rim-highlight), var(--panel-shadow);
+  min-width: 0;
 }
 
 .whoami-card-head {
@@ -2101,9 +2132,15 @@ summary::-webkit-details-marker {
   gap: 14px;
 }
 
+.whoami-card-title {
+  min-width: 0;
+}
+
 .whoami-card h3 {
   font-size: 16px;
-  margin-bottom: 4px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 5px;
 }
 
 .whoami-card-desc {
@@ -2118,10 +2155,12 @@ summary::-webkit-details-marker {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
+  height: 26px;
+  padding: 0 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 550;
+  line-height: 1;
   background: var(--surface-well);
   border: 1px solid var(--line);
   color: var(--muted);
@@ -2146,14 +2185,11 @@ summary::-webkit-details-marker {
 
 .whoami-pairs {
   display: grid;
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
-}
-
-.whoami-pairs.is-compared {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .whoami-pair {
@@ -2167,6 +2203,7 @@ summary::-webkit-details-marker {
   display: block;
   color: var(--muted);
   font-size: 11.5px;
+  line-height: 1.4;
   margin-bottom: 3px;
 }
 
@@ -2175,7 +2212,9 @@ summary::-webkit-details-marker {
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
-  overflow-wrap: anywhere;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .whoami-timing {
@@ -2188,12 +2227,6 @@ summary::-webkit-details-marker {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .whoami-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .whoami-pairs.is-compared {
     grid-template-columns: 1fr;
   }
 }

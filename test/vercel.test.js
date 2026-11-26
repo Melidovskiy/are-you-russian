@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import ip from '../api/ip.js';
 import check from '../api/check.js';
+import whoami from '../api/whoami.js';
 
 test('Vercel IP route uses the platform address and ignores query and other forwarding headers', async () => {
   const request = new Request('https://example.test/api/ip?format=json&ip=8.8.8.8', {
@@ -40,8 +41,23 @@ test('Vercel check route preserves language scoring and text negotiation', async
   assert.match(await text.text(), /Индекс российских настроек/);
 });
 
-test('both Vercel routes support preflight and reject unsupported methods', async () => {
-  for (const route of [ip, check]) {
+test('Vercel whoami route returns platform IP, geo, and filtered headers', async () => {
+  const response = await whoami.fetch(new Request('https://example.test/api/whoami', {
+    headers: {
+      'x-real-ip': '198.51.100.7',
+      'x-vercel-ip-country': 'NL',
+      'accept-language': 'en-US,en;q=0.9',
+    },
+  }));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.ip, '198.51.100.7');
+  assert.equal(body.geo.country, 'NL');
+  assert.equal(body.headers['accept-language'], 'en-US,en;q=0.9');
+});
+
+test('all Vercel routes support preflight and reject unsupported methods', async () => {
+  for (const route of [ip, check, whoami]) {
     const options = await route.fetch(new Request('https://example.test/api', { method: 'OPTIONS' }));
     assert.equal(options.status, 204);
     const post = await route.fetch(new Request('https://example.test/api', { method: 'POST' }));

@@ -55,6 +55,7 @@ function renderGuidePage({ main, title, description, base }) {
         <a class="wordmark" href="${base}" translate="no">are you russian</a>
         <nav class="site-nav" aria-label="Навигация">
           <a href="${base}#main">Проверка</a>
+          <a href="${base}who-am-i/">Согласованность</a>
           <a class="active" href="${base}guides/" aria-current="page">Руководства</a>
           <a href="${base}#method">Методика</a>
           <a href="https://github.com/Melidovskiy/are-you-russian" target="_blank" rel="noopener noreferrer">GitHub</a>

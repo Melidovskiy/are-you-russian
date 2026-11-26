@@ -23,7 +23,7 @@ const server = createServer(async (request, response) => {
   let url;
   try { url = new URL(request.url, 'http://localhost'); }
   catch { response.writeHead(400).end('Bad request'); return; }
-  if (['/api/ip', '/api/check'].includes(url.pathname)) {
+  if (['/api/ip', '/api/check', '/api/whoami'].includes(url.pathname)) {
     const result = await apiResponse(url.pathname, new Request(url, { method: request.method, headers: request.headers }), request.socket.remoteAddress);
     response.writeHead(result.status, Object.fromEntries(result.headers));
     response.end(Buffer.from(await result.arrayBuffer()));
@@ -35,12 +35,12 @@ const server = createServer(async (request, response) => {
   }
   try {
     const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-    if (pathname === '/guides' || /^\/guides\/[a-z0-9-]+$/.test(pathname)) {
+    if (pathname === '/guides' || pathname === '/who-am-i' || /^\/guides\/[a-z0-9-]+$/.test(pathname)) {
       response.writeHead(308, { Location: `${pathname}/${url.search}` }).end();
       return;
     }
     const relative = pathname.endsWith('/') ? `${pathname.slice(1)}index.html` : pathname.slice(1);
-    if (relative.includes('\\') || !/^(?:index\.html|(?:app|guides|theme-init)\.js|LICENSE|guides\/(?:[a-z0-9-]+\/)?index\.html|(?:src|assets|downloads)\/[^.][^\0]*)$/.test(relative)) {
+    if (relative.includes('\\') || !/^(?:index\.html|(?:app|guides|whoami|theme-init)\.js|LICENSE|who-am-i\/index\.html|guides\/(?:[a-z0-9-]+\/)?index\.html|(?:src|assets|downloads)\/[^.][^\0]*)$/.test(relative)) {
       response.writeHead(404).end('Not found');
       return;
     }

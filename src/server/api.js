@@ -33,6 +33,38 @@ export function checkHeaders(headers) {
     const minimum = signals.reduce((n, x) => n + (x.contribution ?? 0), 0);
     return { region: 'ru', minimum, maximum: minimum + 100 - measuredWeight, measuredWeight, totalWeight: 100, normalizedScore: measuredWeight ? Math.round(minimum / measuredWeight * 100) : null, signals, note: 'HTTP видит только заголовки запроса. Часовой пояс, шрифты, Intl и WebRTC требуют проверки в браузере. Это не оценка аккаунта Anthropic.' };
 }
+const WHOAMI_HEADERS = [
+    'accept-language',
+    'user-agent',
+    'sec-ch-ua',
+    'sec-ch-ua-mobile',
+    'sec-ch-ua-platform',
+    'sec-gpc',
+    'dnt',
+    'accept-encoding',
+];
+function decodeGeoHeader(raw) {
+    if (!raw) return null;
+    try { return decodeURIComponent(raw.replace(/\+/g, ' ')); }
+    catch { return raw; }
+}
+export function whoamiPayload(headers, ip) {
+    const picked = {};
+    for (const key of WHOAMI_HEADERS) {
+        const value = headers.get(key);
+        picked[key] = value && value.length > 0 ? value : null;
+    }
+    return {
+        ip,
+        geo: {
+            country: decodeGeoHeader(headers.get('x-vercel-ip-country')),
+            region: decodeGeoHeader(headers.get('x-vercel-ip-country-region')),
+            city: decodeGeoHeader(headers.get('x-vercel-ip-city')),
+            timezone: decodeGeoHeader(headers.get('x-vercel-ip-timezone')),
+        },
+        headers: picked,
+    };
+}
 export async function apiResponse(pathname, request, socketAddress) {
     const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Allow-Headers': 'Accept, Content-Type', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
     if (request.method === 'OPTIONS')
@@ -40,12 +72,17 @@ export async function apiResponse(pathname, request, socketAddress) {
     if (request.method !== 'GET')
         return new Response('Method not allowed', { status: 405, headers: { ...cors, Allow: 'GET, OPTIONS' } });
     const url = new URL(request.url);
-    const json = url.searchParams.get('format') === 'json' || (!['text', 'txt'].includes(url.searchParams.get('format')) && request.headers.get('accept')?.includes('application/json'));
+    const json = pathname === '/api/whoami' || url.searchParams.get('format') === 'json' || (!['text', 'txt'].includes(url.searchParams.get('format')) && request.headers.get('accept')?.includes('application/json'));
     const ip = clientIp(socketAddress, request.headers);
     const headers = { ...cors, 'Content-Type': json ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8' };
     try {
         let body;
-        if (pathname === '/api/ip') {
+        if (pathname === '/api/whoami') {
+            if (!rateLimit(`whoami:${ip ?? 'unknown'}`))
+                return new Response(JSON.stringify({ error: 'rate_limited' }), { status: 429, headers: { ...headers, 'Retry-After': '60' } });
+            body = whoamiPayload(request.headers, ip);
+        }
+        else if (pathname === '/api/ip') {
             const geoHeaders = new Headers();
             for (const name of ['x-vercel-ip-country', 'x-vercel-ip-country-region', 'x-vercel-ip-city']) {
                 const value = request.headers.get(name);

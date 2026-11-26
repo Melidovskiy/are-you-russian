@@ -205,10 +205,12 @@ function renderSummary(findings) {
     node('span', ` / ${total}`, 'whoami-stat-unit'),
   );
   const place = [snapshot['request.city']?.value, snapshot['request.country']?.value].filter(Boolean).join(', ');
+  const placeEl = el('whoami-place');
   if (place) {
-    el('whoami-place').textContent = `Выходной IP определяется как ${place}. Показания HTTP-запроса, сети и браузера сверены по 8 правилам.`;
+    placeEl.textContent = `Выходной IP определяется как ${place}.`;
+    placeEl.hidden = false;
   } else {
-    el('whoami-place').textContent = 'Показания HTTP-запроса, сети и браузера сверены по 8 правилам согласованности.';
+    placeEl.hidden = true;
   }
 }
 

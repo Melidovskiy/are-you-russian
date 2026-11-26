@@ -53,7 +53,7 @@ export function renderLayout({
       <div class="shell header-inner">
         <a class="wordmark" href="${base}" translate="no">are you russian</a>
         <nav class="site-nav" aria-label="Навигация">
-          ${navItem('home', `${base}#main`, 'Проверка')}
+          ${navItem('home', `${base}`, 'Проверка')}
           ${navItem('whoami', `${base}who-am-i/`, 'Согласованность')}
           ${navItem('guides', `${base}guides/`, 'Руководства')}
           <a href="${base}#method">Методика</a>

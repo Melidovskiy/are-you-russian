@@ -6,7 +6,7 @@ export async function buildWhoami(destination) {
   const main = `
       <header class="guides-intro whoami-intro">
         <h1>Проверка согласованности</h1>
-        <p id="whoami-place" class="lead">Сверяем показания HTTP-запроса, сети и браузера по 8 правилам согласованности.</p>
+        <p class="lead">Сравнение выходного IP, часового пояса, языков, заголовков HTTP, GPU и WebRTC по 8 правилам согласованности.</p>
         <div class="whoami-toolbar">
           <button id="whoami-webrtc" class="button primary" type="button">Проверить WebRTC</button>
           <button id="whoami-export" class="button secondary" type="button" disabled>Скачать JSON</button>
@@ -17,6 +17,7 @@ export async function buildWhoami(destination) {
         <span>Собираем показания браузера и сети…</span>
       </div>
       <div id="whoami-content" class="whoami-content" hidden>
+        <p id="whoami-place" class="whoami-place" hidden></p>
         <section class="whoami-summary" aria-label="Сводка согласованности">
           <div class="whoami-stat">
             <span class="whoami-stat-label">Совпадают</span>

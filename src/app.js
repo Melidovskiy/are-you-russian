@@ -101,7 +101,7 @@ function renderSummary(results, finished) {
 element('scan').addEventListener('click', async () => {
   if (scanning) return;
   scanning = true;
-  const minimumDuration = new Promise(resolve => setTimeout(resolve, 2000));
+  const minimumDuration = new Promise(resolve => setTimeout(resolve, 400));
   report = null;
   element('scan').disabled = true;
   element('scan-label').textContent = 'Проверяем…';
@@ -145,8 +145,18 @@ element('scan').addEventListener('click', async () => {
     for (const signal of SIGNALS) {
       updateSignal(signal, results.find(result => result.id === signal.id));
     }
-    const webrtcRoute = compareWebrtcRoute(ip.result?.ip, webrtc);
-    renderIp(element('ip-result'), ip, webrtcRoute, webrtc, ipFamilies);
+    const renderCurrentIp = currentIp => {
+      const webrtcRoute = compareWebrtcRoute(currentIp.result?.ip, webrtc);
+      renderIp(element('ip-result'), currentIp, webrtcRoute, webrtc, ipFamilies, async () => {
+        element('ip-result').textContent = 'Повторяем проверку IP…';
+        const retried = await checkIp();
+        const nextRoute = compareWebrtcRoute(retried.result?.ip, webrtc);
+        if (report) report = { ...report, ip: retried, webrtcRoute: nextRoute };
+        renderCurrentIp(retried);
+      });
+      return webrtcRoute;
+    };
+    const webrtcRoute = renderCurrentIp(ip);
     const summary = renderSummary(results, true);
     report = {
       version: 5, checkedAt: new Date().toISOString(),

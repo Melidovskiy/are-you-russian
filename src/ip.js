@@ -49,7 +49,7 @@ function measurements(entries) {
   return list;
 }
 
-export function renderIp(container, outcome, webrtcRoute, webrtc, ipFamilies) {
+export function renderIp(container, outcome, webrtcRoute, webrtc, ipFamilies, onRetry) {
   const route = document.createElement('p');
   route.className = 'ip-route-comparison';
   route.textContent = `Сравнение с WebRTC: ${routeComparisonLabels[webrtcRoute.status]}.`;
@@ -82,7 +82,19 @@ export function renderIp(container, outcome, webrtcRoute, webrtc, ipFamilies) {
     diagnostics.splice(1, 0, note);
   }
   if (outcome.status === 'error') {
-    container.replaceChildren(document.createTextNode(outcome.message), ...diagnostics);
+    const nodes = [document.createTextNode(outcome.message)];
+    if (typeof onRetry === 'function') {
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'text-button ip-retry';
+      retry.textContent = 'Повторить проверку IP';
+      retry.addEventListener('click', onRetry);
+      const wrap = document.createElement('p');
+      wrap.className = 'ip-retry-wrap';
+      wrap.append(retry);
+      nodes.push(wrap);
+    }
+    container.replaceChildren(...nodes, ...diagnostics);
     return;
   }
   const body = outcome.result;

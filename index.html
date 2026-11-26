@@ -4,18 +4,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Проверка окружения и репутации IP для пользователей Claude. Подробные измерения браузера и короткие руководства по сети и Claude Cage.">
-    <meta name="theme-color" content="#f8f7f5">
+    <meta name="theme-color" content="#f4f1eb">
     <meta name="referrer" content="no-referrer">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.ipify.org https://api6.ipify.org; object-src 'none'; base-uri 'self'; form-action 'none'">
     <meta property="og:title" content="Are you Russian — проверка окружения для Claude">
     <meta property="og:description" content="Настройки браузера, репутация IP и руководства по окружению Claude.">
     <meta property="og:type" content="website">
     <title>Are you Russian — проверка окружения для Claude</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d97757'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-size='18' fill='%23ffffff'%3Eа%3C/text%3E%3C/svg%3E">
     <link rel="preload" href="./assets/roboto-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="./assets/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="./assets/source-serif-4-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="./assets/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <script src="./theme-init.js"></script>
     <link rel="stylesheet" href="./src/styles.css">
     <script type="module" src="./app.js"></script>
   </head>
@@ -39,30 +40,40 @@
     </header>
     <main id="main" class="shell">
       <section class="intro" aria-labelledby="page-title">
-        <h1 id="page-title">Ваше окружение<br>
-          для Claude</h1>
-        <p class="lead">Какие настройки браузера указывают на российский регион и что известно о вашем выходном IP.</p>
-        <div class="scan-controls">
-          <button id="scan" class="button primary" type="button">
-            <span id="scan-spinner" class="scan-spinner" aria-hidden="true" hidden></span>
-            <span id="scan-label">Начать проверку</span>
-          </button>
-          <label class="webrtc-option">
-            <span class="switch">
-              <input id="include-webrtc" type="checkbox" role="switch" aria-describedby="webrtc-note">
-              <span class="switch-track" aria-hidden="true"></span>
-            </span>
-            <span>Включить проверку WebRTC</span>
-          </label>
-          <p id="webrtc-note" class="local-note">Для оценки IP используются внешние источники репутации. WebRTC дополнительно обращается к STUN-серверу Google.</p>
-          <label class="webrtc-option">
-            <span class="switch">
-              <input id="include-ip-families" type="checkbox" role="switch" aria-describedby="ip-families-note">
-              <span class="switch-track" aria-hidden="true"></span>
-            </span>
-            <span>Проверить IPv4 и IPv6 отдельно</span>
-          </label>
-          <p id="ip-families-note" class="local-note">Два запроса из браузера к ipify. Сервис увидит выходные IP этих запросов.</p>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <h1 id="page-title">Ваше окружение<br>
+              для Claude</h1>
+            <p class="lead">Какие настройки браузера указывают на российский регион и что известно о вашем выходном IP.</p>
+          </div>
+          <div class="scan-controls">
+            <button id="scan" class="button primary" type="button">
+              <span id="scan-spinner" class="scan-spinner" aria-hidden="true" hidden></span>
+              <span id="scan-label">Начать проверку</span>
+            </button>
+            <div class="scan-options">
+              <div class="option-row">
+                <label class="webrtc-option">
+                  <span class="option-label">Включить проверку WebRTC</span>
+                  <span class="switch">
+                    <input id="include-webrtc" type="checkbox" role="switch" aria-describedby="webrtc-note">
+                    <span class="switch-track" aria-hidden="true"></span>
+                  </span>
+                </label>
+                <p id="webrtc-note" class="local-note">Для оценки IP используются внешние источники репутации. WebRTC дополнительно обращается к STUN-серверу Google.</p>
+              </div>
+              <div class="option-row">
+                <label class="webrtc-option">
+                  <span class="option-label">Проверить IPv4 и IPv6 отдельно</span>
+                  <span class="switch">
+                    <input id="include-ip-families" type="checkbox" role="switch" aria-describedby="ip-families-note">
+                    <span class="switch-track" aria-hidden="true"></span>
+                  </span>
+                </label>
+                <p id="ip-families-note" class="local-note">Два запроса из браузера к ipify. Сервис увидит выходные IP этих запросов.</p>
+              </div>
+            </div>
+          </div>
         </div>
         <div id="result" class="result-panel" hidden>
           <div id="report-results" class="report-results" hidden>

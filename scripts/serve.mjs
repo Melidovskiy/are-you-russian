@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
+import { gzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { apiResponse } from '../src/server/api.js';
@@ -10,6 +11,13 @@ const types = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2',
 };
+const compressible = new Set(['.html', '.js', '.css', '.svg']);
+
+function cacheControlFor(ext) {
+  if (ext === '.woff2') return 'public, max-age=31536000, immutable';
+  if (ext === '.css' || ext === '.js' || ext === '.png' || ext === '.svg') return 'public, max-age=300';
+  return 'no-cache';
+}
 
 const server = createServer(async (request, response) => {
   let url;
@@ -32,7 +40,7 @@ const server = createServer(async (request, response) => {
       return;
     }
     const relative = pathname.endsWith('/') ? `${pathname.slice(1)}index.html` : pathname.slice(1);
-    if (relative.includes('\\') || !/^(?:index\.html|(?:app|guides)\.js|LICENSE|guides\/(?:[a-z0-9-]+\/)?index\.html|(?:src|assets|downloads)\/[^.][^\0]*)$/.test(relative)) {
+    if (relative.includes('\\') || !/^(?:index\.html|(?:app|guides|theme-init)\.js|LICENSE|guides\/(?:[a-z0-9-]+\/)?index\.html|(?:src|assets|downloads)\/[^.][^\0]*)$/.test(relative)) {
       response.writeHead(404).end('Not found');
       return;
     }
@@ -41,12 +49,22 @@ const server = createServer(async (request, response) => {
       response.writeHead(404).end('Not found');
       return;
     }
-    const body = await readFile(filename);
-    response.writeHead(200, {
-      'Content-Type': types[path.extname(filename)] || 'text/plain; charset=utf-8',
-      'Content-Length': body.byteLength, 'Cache-Control': 'no-store',
-      'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer',
-    });
+    const ext = path.extname(filename);
+    const raw = await readFile(filename);
+    const useGzip = compressible.has(ext) && /\bgzip\b/i.test(request.headers['accept-encoding'] || '');
+    const body = useGzip ? gzipSync(raw) : raw;
+    const headers = {
+      'Content-Type': types[ext] || 'text/plain; charset=utf-8',
+      'Content-Length': body.byteLength,
+      'Cache-Control': cacheControlFor(ext),
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+    };
+    if (useGzip) {
+      headers['Content-Encoding'] = 'gzip';
+      headers['Vary'] = 'Accept-Encoding';
+    }
+    response.writeHead(200, headers);
     response.end(request.method === 'HEAD' ? undefined : body);
   } catch {
     response.writeHead(404).end('Not found');

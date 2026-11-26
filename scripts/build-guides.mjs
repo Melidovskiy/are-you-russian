@@ -23,18 +23,59 @@ export function prepareGuide(markdown) {
   return { html, toc, minutes: Math.max(1, Math.ceil(words / 220)) };
 }
 
-function page(template, main, title, description, base) {
-  return template
-    .replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeHtml(title)} — are you russian</title>`)
-    .replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${escapeHtml(description)}">`)
-    .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${escapeHtml(title)}">`)
-    .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${escapeHtml(description)}">`)
-    .replace(/href="\.\//g, `href="${base}`)
-    .replace('src="./app.js"', `src="${base}guides.js"`)
-    .replace('<a class="active" href="#main" aria-current="page">Проверка</a>', `<a href="${base}#main">Проверка</a>`)
-    .replace(`href="${base}guides/">Руководства</a>`, `class="active" href="${base}guides/" aria-current="page">Руководства</a>`)
-    .replace('href="#method"', `href="${base}#method"`)
-    .replace(/<main id="main" class="shell">[\s\S]*?<\/main>/, `<main id="main" class="shell guides-main">${main}</main>`);
+function renderGuidePage({ main, title, description, base }) {
+  const escapedTitle = escapeHtml(title);
+  const escapedDescription = escapeHtml(description);
+  return `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="${escapedDescription}">
+    <meta name="theme-color" content="#f4f1eb">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.ipify.org https://api6.ipify.org; object-src 'none'; base-uri 'self'; form-action 'none'">
+    <meta property="og:title" content="${escapedTitle}">
+    <meta property="og:description" content="${escapedDescription}">
+    <meta property="og:type" content="website">
+    <title>${escapedTitle} — are you russian</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c96442'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia,serif' font-size='18' fill='%23ffffff'%3Eа%3C/text%3E%3C/svg%3E">
+    <link rel="preload" href="${base}assets/roboto-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="${base}assets/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="${base}assets/source-serif-4-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="${base}assets/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <script src="${base}theme-init.js"></script>
+    <link rel="stylesheet" href="${base}src/styles.css">
+    <script type="module" src="${base}guides.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">К содержимому</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="${base}" translate="no">are you russian</a>
+        <nav class="site-nav" aria-label="Навигация">
+          <a href="${base}#main">Проверка</a>
+          <a class="active" href="${base}guides/" aria-current="page">Руководства</a>
+          <a href="${base}#method">Методика</a>
+          <a href="https://github.com/Melidovskiy/are-you-russian" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+        <select id="theme" aria-label="Цветовая тема">
+          <option value="system">Авто</option>
+          <option value="light">Светлая</option>
+          <option value="dark">Тёмная</option>
+        </select>
+      </div>
+    </header>
+    <main id="main" class="shell guides-main">${main}</main>
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <a href="https://github.com/Melidovskiy/are-you-russian">Melidovskiy</a>
+        <span>На основе <a href="https://github.com/LinXiaoTao/FuckClaude">FuckClaude</a> от LinXiaoTao. <a href="${base}LICENSE">MIT License</a>.</span>
+      </div>
+    </footer>
+  </body>
+</html>
+`;
 }
 
 function guideLink(guide, href, minutes) {
@@ -42,7 +83,6 @@ function guideLink(guide, href, minutes) {
 }
 
 export async function buildGuides(root, destination) {
-  const template = await readFile(path.join(root, 'index.html'), 'utf8');
   const prepared = new Map();
   const seen = new Set();
   for (const guide of guides) {
@@ -82,7 +122,12 @@ export async function buildGuides(root, destination) {
       <p class="guide-meta">Редакция <time datetime="${revision}">${revisionLabel}</time></p>
     </aside>`;
   await mkdir(path.join(destination, 'guides'), { recursive: true });
-  await writeFile(path.join(destination, 'guides/index.html'), page(template, hub, 'Руководства по Claude', 'Проверка окружения Claude, Claude Cage, требования к VPS и диагностика ошибок доступа.', '../'));
+  await writeFile(path.join(destination, 'guides/index.html'), renderGuidePage({
+    main: hub,
+    title: 'Руководства по Claude',
+    description: 'Проверка окружения Claude, Claude Cage, требования к VPS и диагностика ошибок доступа.',
+    base: '../',
+  }));
 
   for (const guide of guides) {
     const article = prepared.get(guide.slug);
@@ -116,6 +161,11 @@ export async function buildGuides(root, destination) {
       </div>`;
     const directory = path.join(destination, 'guides', guide.slug);
     await mkdir(directory, { recursive: true });
-    await writeFile(path.join(directory, 'index.html'), page(template, main, guide.title, guide.summary, '../../'));
+    await writeFile(path.join(directory, 'index.html'), renderGuidePage({
+      main,
+      title: guide.title,
+      description: guide.summary,
+      base: '../../',
+    }));
   }
 }

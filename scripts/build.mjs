@@ -12,6 +12,7 @@ await mkdir(path.join(destination, 'src'));
 for (const name of ['index.html', 'src/styles.css', 'assets', 'LICENSE']) {
   await cp(path.join(root, name), path.join(destination, name), { recursive: true });
 }
+await cp(path.join(root, 'src/theme-init.js'), path.join(destination, 'theme-init.js'));
 await build({
   entryPoints: [path.join(root, 'src/app.js')],
   outfile: path.join(destination, 'app.js'),

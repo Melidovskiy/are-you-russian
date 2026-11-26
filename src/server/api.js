@@ -46,7 +46,12 @@ export async function apiResponse(pathname, request, socketAddress) {
     try {
         let body;
         if (pathname === '/api/ip') {
-            const outcome = await evaluateIp(new Headers(), ip);
+            const geoHeaders = new Headers();
+            for (const name of ['x-vercel-ip-country', 'x-vercel-ip-country-region', 'x-vercel-ip-city']) {
+                const value = request.headers.get(name);
+                if (value) geoHeaders.set(name, value);
+            }
+            const outcome = await evaluateIp(geoHeaders, ip);
             if (outcome.kind === 'rate_limited')
                 return new Response(JSON.stringify({ error: 'rate_limited' }), { status: 429, headers: { ...headers, 'Retry-After': '60' } });
             body = outcome.body;
@@ -54,7 +59,7 @@ export async function apiResponse(pathname, request, socketAddress) {
                 return new Response(renderText(body, 'ru'), { headers });
         }
         else {
-            if (!rateLimit(`check:${ip}`))
+            if (!rateLimit(`check:${ip ?? 'unknown'}`))
                 return new Response(JSON.stringify({ error: 'rate_limited' }), { status: 429, headers: { ...headers, 'Retry-After': '60' } });
             body = checkHeaders(request.headers);
             if (!json)

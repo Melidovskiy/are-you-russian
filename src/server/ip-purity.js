@@ -736,18 +736,20 @@ async function lookupPublic(ip) {
 function skipped(detail) {
     return blank("unavailable", detail);
 }
+var DEGRADED_CACHE_TTL_MS = 30 * 1e3;
+var inflight = new Map();
 function takeCache(ip) {
     const hit = cache.get(ip);
     if (!hit)
         return null;
-    if (Date.now() - hit.at > CACHE_TTL_MS) {
+    if (Date.now() - hit.at > (hit.ttl ?? CACHE_TTL_MS)) {
         cache.delete(ip);
         return null;
     }
     return { ...hit.body, cached: true };
 }
-function storeCache(ip, body) {
-    cache.set(ip, { at: Date.now(), body: { ...body, cached: false } });
+function storeCache(ip, body, ttl = CACHE_TTL_MS) {
+    cache.set(ip, { at: Date.now(), ttl, body: { ...body, cached: false } });
     if (cache.size <= CACHE_MAX)
         return;
     const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at);
@@ -780,7 +782,7 @@ function rateLimit(ip, now = Date.now()) {
 var RATE_LIMIT_PER_MINUTE = RATE_LIMIT;
 async function evaluateIp(headers, clientAddress) {
     const ip = resolveEgressIp(headers, clientAddress);
-    const limitKey = ip ?? "unknown";
+    const limitKey = ip ? `ip:${ip}` : "ip:unknown";
     if (!rateLimit(limitKey))
         return { kind: "rate_limited" };
     if (ip) {
@@ -815,14 +817,21 @@ async function evaluateIp(headers, clientAddress) {
         storeCache(ip, body2);
         return { kind: "ok", body: body2 };
     }
-    let parsed;
-    try {
-        parsed = await lookupPublic(ip);
+    let pending = inflight.get(ip);
+    if (!pending) {
+        pending = (async () => {
+            try {
+                return await lookupPublic(ip);
+            }
+            catch {
+                const failed = blank("unavailable", "lookup failed");
+                return { proxycheck: failed, abuseipdb: failed, ipwho: failed };
+            }
+        })();
+        inflight.set(ip, pending);
+        pending.finally(() => inflight.delete(ip));
     }
-    catch {
-        const failed = blank("unavailable", "lookup failed");
-        parsed = { proxycheck: failed, abuseipdb: failed, ipwho: failed };
-    }
+    const parsed = await pending;
     const body = buildPurity({
         ip,
         sourcesConfigured: configured,
@@ -830,7 +839,9 @@ async function evaluateIp(headers, clientAddress) {
         vercelGeo: geo,
         notice: null
     });
-    storeCache(ip, body);
+    const allFailed = Object.values(parsed).every((src) => src.status !== "ok");
+    const ttl = body.notice?.code === "degraded" || allFailed ? DEGRADED_CACHE_TTL_MS : CACHE_TTL_MS;
+    storeCache(ip, body, ttl);
     return { kind: "ok", body };
 }
 function renderText(body, lang) {

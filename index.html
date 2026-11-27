@@ -32,11 +32,28 @@
           <a href="#method">Методика</a>
           <a href="https://github.com/Melidovskiy/are-you-russian" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
-        <select id="theme" aria-label="Цветовая тема">
+        <select id="theme" class="theme-native-hidden" tabindex="-1" aria-hidden="true" aria-label="Цветовая тема">
           <option value="system">Авто</option>
           <option value="light">Светлая</option>
           <option value="dark">Тёмная</option>
         </select>
+        <div class="theme-picker">
+          <button type="button" class="theme-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Цветовая тема">
+            <span class="theme-trigger-label">
+              <span class="theme-choice" data-choice="system">Авто</span>
+              <span class="theme-choice" data-choice="light">Светлая</span>
+              <span class="theme-choice" data-choice="dark">Тёмная</span>
+            </span>
+            <span class="chevron theme-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="theme-menu-wrap">
+            <div class="theme-menu" role="listbox" aria-label="Цветовая тема">
+              <button type="button" class="theme-option" role="option" data-value="system">Авто</button>
+              <button type="button" class="theme-option" role="option" data-value="light">Светлая</button>
+              <button type="button" class="theme-option" role="option" data-value="dark">Тёмная</button>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
     <main id="main" class="shell">

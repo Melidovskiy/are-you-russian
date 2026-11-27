@@ -448,6 +448,17 @@ h3 {
   outline-offset: 2px;
 }
 
+.theme-choice {
+  display: none;
+}
+
+:root:not([data-theme-choice]) .theme-choice[data-choice="system"],
+:root[data-theme-choice="system"] .theme-choice[data-choice="system"],
+:root[data-theme-choice="light"] .theme-choice[data-choice="light"],
+:root[data-theme-choice="dark"] .theme-choice[data-choice="dark"] {
+  display: inline;
+}
+
 .theme-chevron {
   width: 7px;
   height: 7px;

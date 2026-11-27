@@ -259,7 +259,6 @@ function renderLayers() {
     const present = keys.filter(id => snapshot[id]);
     const row = document.createElement('details');
     row.className = 'signal-row';
-    if (layer.id === 'request' || layer.id === 'script') row.open = true;
 
     const summary = document.createElement('summary');
     const heading = document.createElement('div');
